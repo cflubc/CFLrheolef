@@ -1,0 +1,102 @@
+/*
+ * ConvergenceMonitor.cc
+ *
+ *  Created on: 2013-04-27
+ *      Author: ali
+ */
+
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <cassert>
+#include <fstream>
+
+#include "ConvergenceMonitor.h"
+
+
+ConvergenceMonitor::ConvergenceMonitor(
+		 	 	 	const string& name,
+					const double& error_limit,
+					std::initializer_list<cstr> names ):
+	file_name_base(name),
+	absolute_error(error_limit),
+	param_names( begin(names), end(names) ),
+	converge_histories( names.size() )
+{}
+
+
+void
+ConvergenceMonitor::add_point( const size_t& iter, std::initializer_list<double> vals )
+{
+	assert( vals.size()==converge_histories.size() );
+
+	iteration.emplace_back(iter);
+	auto val( begin(vals) );
+	for(auto& h : converge_histories){
+		h.emplace_back(*val);
+		++val;
+	}
+}
+
+
+bool
+ConvergenceMonitor::is_converged() const
+{
+	bool ans(true);
+	for(const auto& h : converge_histories)
+		ans = ans && (h.back()<=absolute_error);
+	return ans;
+}
+
+
+void
+ConvergenceMonitor::save_to_file( const string& suffix ) const
+{
+	const string full_name(file_name_base+suffix);
+
+	const string out_file(full_name+".cvg");
+	std::ofstream o(out_file);
+	// header of file
+	o << "# iteration\t";
+	for(auto& name : param_names){
+		o << name;
+		o << '\t';
+	}
+	o << '\n';
+	// writing parameters row by row
+	for(size_t i(0); i<iteration.size(); ++i){
+		o << iteration[i];
+		o << '\t';
+		for(const auto& h : converge_histories){
+			o << h[i];
+			o << '\t';
+		}
+		o << '\n';
+	}
+	o.close();
+
+	// generate convergence plot using gnuplot
+	const string gnuplot_file(full_name+".gnu");
+	o.open(gnuplot_file);
+	o << "set term postscript eps\n"
+		 "set logscale y\n"
+		 "set xlabel 'iteration'\n"
+		 "set output '"+full_name+".eps'\n\n";
+
+	o << "plot \\\n";
+	for(size_t i=0; i<n_parameters(); ++i){
+		cstr tail;
+		if( i<n_parameters()-1 )
+			tail = ", \\";
+		else // last line no need for ,
+			tail = " ";
+		char line[150];
+		sprintf(line,"'%s' using 1:%u title '%s' with linespoints lw 5 ps 2%s\n",
+					 out_file.c_str(),i+2,param_names[i],tail);
+		o << line;
+	}
+	o.close();
+
+	system( ("gnuplot "+gnuplot_file).c_str() );
+}
+

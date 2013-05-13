@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+    <FEfields>
+        <pspace>P1</pspace>
+        <vspace>P2</vspace>
+    </FEfields>    
+
+    <Bn>10</Bn>
+    <a>10</a>
+    <convergence_limit>1E-5</convergence_limit>
+    <max_iteration>200</max_iteration>
+    <reports_frequency>10</reports_frequency>    
+
+    <Adaptation>
+        <cycles>1</cycles>
+        <max_vertices>10000</max_vertices>
+        <hmin>.01</hmin>
+        <hmax>.1</hmax>
+        <hcoef>4</hcoef>
+    </Adaptation>    
+    
+    <BC>dl</BC>
+</data>

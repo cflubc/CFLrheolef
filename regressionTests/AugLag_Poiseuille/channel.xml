@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+    <FEfields>
+        <pspace>P1</pspace>
+        <vspace>P2</vspace>
+    </FEfields>
+    
+    <AugmentedLagrangian>
+        <Bn>4.8</Bn>
+        <a>5</a>
+    </AugmentedLagrangian>
+
+    <BC>
+        <lid_velocity>1.</lid_velocity>
+    </BC>
+    
+    <Adaptation>
+        <cycles>1</cycles>
+        <max_vertices>10000</max_vertices>
+        <hmin>.01</hmin>
+        <hmax>.1</hmax>
+        <hcoef>4</hcoef>
+    </Adaptation>    
+    
+</data>

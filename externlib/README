@@ -1,0 +1,5 @@
+ Created on: Apr 7, 2013
+     Author: ali
+  
+For reading program parameters form XML file TinyXML library has been used. You should define the the macro "TIXML_USE_TICPP" when compiling library to activate C++ features of it.
+g++ .... -DTIXML_USE_TICPP

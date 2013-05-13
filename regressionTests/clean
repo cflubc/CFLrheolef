@@ -1,0 +1,1 @@
+rm "$1"-*  *.geo.gz *.field.gz *.vtk *.bb *.cvg *.eps *.gnu
