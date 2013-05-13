@@ -41,6 +41,9 @@ public:
 
 	void solve( field& Uh, field& Ph, const field& rhs ) const
 	{slv( Uh, Ph, rhs.u()-(a.ub()*Uh.b()) );}
+
+//	void solve( field& Uh, field& Ph, const field& urhs, const field& prhs ) const
+//	{sol.solve( urhs.u(), prhs.u(), Uh.set_u(), Ph.set_u() );}
 };
 
 

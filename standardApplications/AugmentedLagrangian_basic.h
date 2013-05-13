@@ -42,8 +42,7 @@ public:
 	template< typename FieldsPool, typename DirichletBC >
 	AugmentedLagrangian_basic( const XMLConfigFile& conf,
 							   FieldsPool& fields,
-							   DirichletBC& BC
-							   ):
+							   DirichletBC& BC ):
 		Bn( conf.atof("Bn") ),
 		a( conf.atof("a") ),
 		alpha( a/(1.+a) ),
@@ -91,6 +90,13 @@ public:
 	void solve( field& rhs ){
 		flow_solver.solve(rhs);
 		rhs = 0.;
+	}
+
+	void solve_ntimes( field& rhs, const int k ){
+		for(int i=0; i<k; ++i){
+			solve(rhs);
+			contribute_to_rhs_fast(rhs);
+		}
 	}
 
 
@@ -154,7 +160,7 @@ void AugmentedLagrangian_basic<FlowSolver>::add_rhs( field& rhs, LoopManipulator
 		// update of Lagrange mults
 		for(int i=0; i<Tensor_itr::Ncomp; ++i){
 			T(i)   = TaGdot[i]*(1.-coef);
-			TmG(i) = TaGdot[i]*(1.-2.*coef);
+			TmG(i) = TaGdot[i]*(1.-coef-coef);
 			obj.do_extra_stuff( i, TaGdot[i], T(i) );
 //				G(i)   = TaGdot[i]*coef;
 		}

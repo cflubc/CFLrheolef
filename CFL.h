@@ -80,5 +80,6 @@ public:
 	{ counter=0; }
 };
 
+
 #endif /* CFL_H_ */
 

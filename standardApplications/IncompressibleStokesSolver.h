@@ -55,8 +55,7 @@ public:
 	template< typename FieldsPool, typename DiffusionForm >
 	IncompLinearDiffusionStokesSolver( const XMLConfigFile& conf,
 			                     	   FieldsPool& fields,
-			                     	   const DiffusionForm& Dform
-			                     	    ):
+			                     	   const DiffusionForm& Dform ):
 		uh(fields.Uh),
 		ph(fields.Ph),
 		solver( conf, Dform, -rheolef::form(uh.get_space(),ph.get_space(),"div") )

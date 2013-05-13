@@ -32,7 +32,7 @@ public:
 								 ):
 		AL(conf,fields,BC),
 		TminusaG_rhs(fields.Xh, 0.),
-		n_report( conf.atoi_if_exist("reports_frequency",10) ),
+		n_iterations_without_report( conf.atoi_if_exist("reports_frequency",10)-1 ),
 		max_iteration( conf.atoi("max_iteration") ),
 		time_to_print_header( conf.atoi_if_exist("report_header_reprint_frequency",30) ),
 		residuals_monitor("UTconvergence", conf.atof("convergence_limit"), {"|Un+1-Un|","|Tn+1-Tn|"}),
@@ -43,22 +43,18 @@ public:
 	{
 		auto program_output( make_column_output(std::cout,10,16,16) );
 		int niter(0);
-//		L2norm_calculator Uchange( AL.Uh() );
 
 		do {
 			// iterations without reporting
-			for(int i=0; i<n_report-1; ++i){
-				AL.solve(TminusaG_rhs);
-				AL.contribute_to_rhs_fast(TminusaG_rhs);
-				++niter;
-			}
+			AL.solve_ntimes(TminusaG_rhs,n_iterations_without_report);
+			niter += n_iterations_without_report;
+
 			// iteration with computing L2 change of velocity and stress
 			Uchange.save_field();
 			AL.solve(TminusaG_rhs);
 			const Float Tres = AL.contribute_to_rhs_report_stress_change(TminusaG_rhs);
 			const Float Ures = Uchange.calculate_field_change();
-			++niter;
-			residuals_monitor.add_point(niter,{Ures,Tres});
+			residuals_monitor.add_point(++niter,{Ures,Tres});
 
 			if( time_to_print_header.alarm_ringing() ){
 				program_output.print("\niteration","|Un+1-Un|_L2","|Tn+1-Tn|_L2");
@@ -67,7 +63,7 @@ public:
 			program_output.print(niter,Ures,Tres);
 		} while( !residuals_monitor.is_converged() && (niter<max_iteration) );
 
-		if( niter<max_iteration )
+		if( residuals_monitor.is_converged() )
 			std::cout << "\nThe solution converged... :-)\n";
 		else
 			std::cout << "\nMax limit of iterations reached, stopping...\n";
@@ -83,7 +79,7 @@ private:
 	AugmentedLagrangian_basic<FlowSolver> AL;
 	rheolef::field TminusaG_rhs;
 
-	int n_report;
+	int n_iterations_without_report;
 	int max_iteration;
 	RecuringAlarm time_to_print_header;
 	ConvergenceMonitor residuals_monitor;
