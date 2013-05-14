@@ -31,7 +31,7 @@ typedef IncompLinearDiffusionStokesSolver<BlockSystem_abtb> StokesFlow;
 typedef StandardAugmentedLagrangian<StokesFlow> SApplication;
 
 typedef SApplication Application;
-typedef cavityBC  DirichletBoundaryConditions;
+typedef channel_fullBC  DirichletBoundaryConditions;
 //typedef AdaptationLoop<SApplication,DirichletBoundaryConditions>  Application;
 
 

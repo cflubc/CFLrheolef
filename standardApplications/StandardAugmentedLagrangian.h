@@ -23,20 +23,20 @@ class StandardAugmentedLagrangian
 {
 	typedef rheolef::Float Float;
 	typedef rheolef::field field;
-
+	field& _uh;
 public:
 	template< typename FieldsPool, typename DirichletBC >
 	StandardAugmentedLagrangian( const XMLConfigFile& conf,
 								 FieldsPool& fields,      //const rheolef::geo& omega,
-								 DirichletBC BC
-								 ):
+								 DirichletBC BC ):
 		AL(conf,fields,BC),
 		TminusaG_rhs(fields.Xh, 0.),
 		n_iterations_without_report( conf.atoi_if_exist("reports_frequency",10)-1 ),
 		max_iteration( conf.atoi("max_iteration") ),
 		time_to_print_header( conf.atoi_if_exist("report_header_reprint_frequency",30) ),
 		residuals_monitor("UTconvergence", conf.atof("convergence_limit"), {"|Un+1-Un|","|Tn+1-Tn|"}),
-		Uchange(fields.Uh)
+		Uchange(fields.Uh),
+		_uh(fields.Uh)
 	{}
 
 	void run()
@@ -44,13 +44,17 @@ public:
 		auto program_output( make_column_output(std::cout,10,16,16) );
 		int niter(0);
 
+		rheolef::test v(_uh.get_space());
+		field pinlet = integrate("left", -4.*dot(v,rheolef::normal()) );
+
 		do {
 			// iterations without reporting
-			AL.solve_ntimes(TminusaG_rhs,n_iterations_without_report);
-			niter += n_iterations_without_report;
+//			AL.solve_ntimes(TminusaG_rhs,n_iterations_without_report);
+//			niter += n_iterations_without_report;
 
 			// iteration with computing L2 change of velocity and stress
 			Uchange.save_field();
+			TminusaG_rhs += pinlet;
 			AL.solve(TminusaG_rhs);
 			const Float Tres = AL.contribute_to_rhs_report_stress_change(TminusaG_rhs);
 			const Float Ures = Uchange.calculate_field_change();
@@ -61,7 +65,7 @@ public:
 				program_output.fill_horizontal('-',1.1);
 			}
 			program_output.print(niter,Ures,Tres);
-		} while( !residuals_monitor.is_converged() && (niter<max_iteration) );
+		} while( (niter<max_iteration) && !residuals_monitor.is_converged() );
 
 		if( residuals_monitor.is_converged() )
 			std::cout << "\nThe solution converged... :-)\n";

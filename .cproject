@@ -31,8 +31,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/externlib/TinyXML++}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/externlib}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/adaptivity}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-dev/include"/>
-									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-dev/lib"/>
+									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-6.4/include"/>
+									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-6.4/lib"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.warnings.toerrors.1396769311" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.other.other.1220187825" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -Wno-unused -Wno-strict-aliasing" valueType="string"/>
@@ -46,7 +46,7 @@
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.905134780" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.746361596" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.357181275" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
+							<tool command="g++" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.357181275" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.libs.30787449" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="rheolef"/>
 									<listOptionValue builtIn="false" value="CGAL"/>
@@ -54,9 +54,9 @@
 									<listOptionValue builtIn="false" value="amd"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.1302734132" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-dev/lib"/>
+									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-6.4/lib"/>
 								</option>
-								<option id="gnu.cpp.link.option.flags.2110488263" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-rpath=/home/ali/Install/rheolef-dev/lib" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.2110488263" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-rpath=/home/ali/Install/rheolef-6.4/lib" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.691160435" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

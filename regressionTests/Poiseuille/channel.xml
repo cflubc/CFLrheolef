@@ -3,14 +3,17 @@
     <FEfields>
         <pspace>P1</pspace>
         <vspace>P2</vspace>
-    </FEfields>    
+    </FEfields>
+    
+    <AugmentedLagrangian>
+        <Bn>4.8</Bn>
+        <a>5</a>
+    </AugmentedLagrangian>
 
-    <Bn>1</Bn>
-    <a>10</a>
-    <convergence_limit>1E-5</convergence_limit>
-    <max_iteration>100</max_iteration>
-    <reports_frequency>1</reports_frequency>    
-
+    <BC>
+        <lid_velocity>1.</lid_velocity>
+    </BC>
+    
     <Adaptation>
         <cycles>1</cycles>
         <max_vertices>10000</max_vertices>
@@ -19,5 +22,4 @@
         <hcoef>4</hcoef>
     </Adaptation>    
     
-    <BC>dl</BC>
 </data>
