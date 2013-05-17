@@ -15,28 +15,50 @@
 #include "ErrorAnalysis.h"
 #include "OutputFormatting.h"
 #include "ConvergenceMonitor.h"
+#include "NormalStressBC_RHS.h"
 #include "AugmentedLagrangian_basic.h"
 
 
-template< typename FlowSolver >
+
+class NormalStressBC
+{
+	NormalStressBC_RHS pinlet;
+
+public:
+	template< typename FieldsPool >
+	NormalStressBC( const XMLConfigFile& conf, FieldsPool& fields ):
+		pinlet( conf.child("PBC"),fields.Uh.get_space() )
+	{}
+
+	void add_to_rhs( rheolef::field& rhs ) const
+	{pinlet.add_to_rhs(rhs);}
+};
+
+struct VoidRHS
+{
+	template< typename FieldsPool >
+	VoidRHS( const XMLConfigFile&, FieldsPool& ) {}
+	void add_to_rhs( rheolef::field& ) const {}
+};
+
+template< typename VelocityMinimizationSolver, typename VelocityRHSManipulator >
 class StandardAugmentedLagrangian
 {
 	typedef rheolef::Float Float;
 	typedef rheolef::field field;
-	field& _uh;
+
 public:
 	template< typename FieldsPool, typename DirichletBC >
 	StandardAugmentedLagrangian( const XMLConfigFile& conf,
-								 FieldsPool& fields,      //const rheolef::geo& omega,
+								 FieldsPool& fields,
 								 DirichletBC BC ):
+		rhs_manipulator(conf,fields),
 		AL(conf,fields,BC),
-		TminusaG_rhs(fields.Xh, 0.),
-		n_iterations_without_report( conf.atoi_if_exist("reports_frequency",10)-1 ),
 		max_iteration( conf.atoi("max_iteration") ),
-		time_to_print_header( conf.atoi_if_exist("report_header_reprint_frequency",30) ),
-		residuals_monitor("UTconvergence", conf.atof("convergence_limit"), {"|Un+1-Un|","|Tn+1-Tn|"}),
+		n_iterations_without_report( conf.atoi_if_exist("reports_frequency",10)-1 ),
 		Uchange(fields.Uh),
-		_uh(fields.Uh)
+		residuals_monitor("UTconvergence", conf.atof("convergence_limit"), {"|Un+1-Un|","|Tn+1-Tn|"}),
+		time_to_print_header( conf.atoi_if_exist("report_header_reprint_frequency",30) )
 	{}
 
 	void run()
@@ -44,19 +66,15 @@ public:
 		auto program_output( make_column_output(std::cout,10,16,16) );
 		int niter(0);
 
-		rheolef::test v(_uh.get_space());
-		field pinlet = integrate("left", -4.*dot(v,rheolef::normal()) );
-
+		AL.set_rhs_const_part_to_discrete_dirichlet_rhs();
+		rhs_manipulator.add_to_rhs( AL.vel_rhs_const_part() );
 		do {
 			// iterations without reporting
-//			AL.solve_ntimes(TminusaG_rhs,n_iterations_without_report);
-//			niter += n_iterations_without_report;
-
+			AL.iterate_ntimes(n_iterations_without_report);
+			niter += n_iterations_without_report;
 			// iteration with computing L2 change of velocity and stress
 			Uchange.save_field();
-			TminusaG_rhs += pinlet;
-			AL.solve(TminusaG_rhs);
-			const Float Tres = AL.contribute_to_rhs_report_stress_change(TminusaG_rhs);
+			const Float Tres = AL.iterate_report_stress_change();
 			const Float Ures = Uchange.calculate_field_change();
 			residuals_monitor.add_point(++niter,{Ures,Tres});
 
@@ -68,26 +86,27 @@ public:
 		} while( (niter<max_iteration) && !residuals_monitor.is_converged() );
 
 		if( residuals_monitor.is_converged() )
-			std::cout << "\nThe solution converged... :-)\n";
+			std::cout << "\nThe solution converged... :-)\n\n";
 		else
-			std::cout << "\nMax limit of iterations reached, stopping...\n";
+			std::cout << "\nMax limit of iterations reached, stopping...\n\n";
 
 		AL.write_results();
 		residuals_monitor.save_to_file();
 	}
 
 	field adapt_criteria() const
-	{ return AL.adapt_criteria(); }
+	{return AL.adapt_criteria();}
+
 
 private:
-	AugmentedLagrangian_basic<FlowSolver> AL;
-	rheolef::field TminusaG_rhs;
+	VelocityRHSManipulator rhs_manipulator;
+	AugmentedLagrangian_basic<VelocityMinimizationSolver> AL;
 
-	int n_iterations_without_report;
 	int max_iteration;
-	RecuringAlarm time_to_print_header;
-	ConvergenceMonitor residuals_monitor;
+	int n_iterations_without_report;
 	L2norm_calculator Uchange;
+	ConvergenceMonitor residuals_monitor;
+	RecuringAlarm time_to_print_header;
 
 };
 

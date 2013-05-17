@@ -28,15 +28,14 @@
  * non-dirichelt boudaries of velocity . Say a Poisseulle flow where you apply
  * pressure drop by a constant body force.
  *
- * If you want to have normal stress contribution as well, see
- * NeumannIncompNewtonianStokesSolver class.
- *
+ * If you want to have normal stress contribution as well, it should be passed in
+ * the righ hand side of the system.
  */
 template< typename LinearSol >
 class IncompLinearDiffusionStokesSolver
 {
 	typedef rheolef::field field;
-	typedef rheolef::geo     geo;
+	typedef rheolef::form form;
 
 	field& uh;
 	field& ph;
@@ -52,6 +51,7 @@ public:
 				     D*rheolef::form(fields.Uh.get_space(),fields.Uh.get_space(),"2D_D") )
 	{}
 
+
 	template< typename FieldsPool, typename DiffusionForm >
 	IncompLinearDiffusionStokesSolver( const XMLConfigFile& conf,
 			                     	   FieldsPool& fields,
@@ -62,7 +62,9 @@ public:
 	{}
 
 	void run(){
-		solve();
+		field urhs(uh.get_space(), 0.);
+		set_discrete_dirichlet_rhs(urhs);
+		solve(urhs);
 		write_results();
 	}
 
@@ -80,13 +82,14 @@ public:
 		o.close();
 	}
 
-	void solve()
-	{solver.solve(uh,ph);}
-
-	void solve( const field& rhs )
+	void solve( field& rhs )
 	{solver.solve(uh,ph,rhs);}
 
+	void set_discrete_dirichlet_rhs( field& urhs ) {
+		solver.set_discrete_dirichlet_rhs(urhs,uh);
+	}
 };
 
 
 #endif /* INCOMPRESSIBLESTOKESSOLVER_H_ */
+

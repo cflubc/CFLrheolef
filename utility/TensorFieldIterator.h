@@ -37,8 +37,11 @@ public:
 	{ return *(it[i]); }
 
 	void operator++(){
-		for(int i=0; i<Ncomp; ++i)
-			++(it[i]);
+//		for(int i=0; i<Ncomp; ++i)
+//			++(it[i]);
+		++(it[0]);
+		++(it[1]);
+		++(it[2]);
 	}
 
 	bool end_reached() const

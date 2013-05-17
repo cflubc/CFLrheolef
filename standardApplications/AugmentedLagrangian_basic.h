@@ -28,7 +28,7 @@
 #include "DiffusionForms.h"
 
 
-template< typename FlowSolver >
+template< typename VelocityMinimizationSolver >
 class AugmentedLagrangian_basic
 {
 	typedef rheolef::field field;
@@ -46,12 +46,14 @@ public:
 		Bn( conf.atof("Bn") ),
 		a( conf.atof("a") ),
 		alpha( a/(1.+a) ),
-		flow_solver(conf,fields,BC,a),
+		velocity_minimizer(conf,fields,BC,a),
 		Xh(fields.Uh.get_geo(), derivative_approx(fields.Uh.get_approx()), "tensor"),
 		Tau(Xh, 0.),
 		Gam(Xh, 0.),
 		Gamdot(Xh, 0.),
 		TminusaG(Xh, 0.),
+		vel_rhs(fields.Uh.get_space(), 0.),
+		vel_rhs_const(vel_rhs.get_space(), 0.),
 		Gamdot_server(fields.Uh),
 		div_ThUh( -.5*trans(Gamdot_server.set_desired_strainrate_space(Xh)) ),
 		deltaTau(Tau)
@@ -60,7 +62,7 @@ public:
 
 	void contribute_to_rhs_fast( field& rhs ){
 		const manip_void x;
-		add_rhs(rhs,x);
+		update_lagrangeMultipliers_and_add2velocity_rhs(rhs,x);
 	}
 
 	Float contribute_to_rhs_report_stress_change( field& rhs ){
@@ -72,7 +74,7 @@ public:
 	field adapt_criteria() const {
 		// just scalar version of Th
 		space T0h( Xh.get_geo(), Xh.get_approx() );
-		return interpolate( T0h, sqrt(norm2(Gamdot)+Bn*norm(Gamdot)) );
+		return interpolate( T0h, sqrt(.5*norm2(Gamdot)+Bn*std::sqrt(.5)*norm(Gamdot)) );
 	}
 
 	void write_results() const {
@@ -82,41 +84,55 @@ public:
 	}
 
 	void write_fields( rheolef::odiststream& o ) const {
-		flow_solver.write_results(o);
+		velocity_minimizer.write_results(o);
 		write_field(Tau,"T",o);
 		write_field(Gam,"Gam",o);
 	}
 
-	void solve( field& rhs ){
-		flow_solver.solve(rhs);
-		rhs = 0.;
+	void set_rhs_const_part_to_discrete_dirichlet_rhs(){
+		velocity_minimizer.set_discrete_dirichlet_rhs(vel_rhs_const);
 	}
 
-	void solve_ntimes( field& rhs, const int k ){
-		for(int i=0; i<k; ++i){
-			solve(rhs);
-			contribute_to_rhs_fast(rhs);
+	void iterate_ntimes( const int niter ){
+		for( int i=0; i<niter; ++i ){
+			vel_rhs = vel_rhs_const;
+			contribute_to_rhs_fast(vel_rhs);
+			velocity_minimizer.solve(vel_rhs);
 		}
 	}
 
+	Float iterate_report_stress_change(){
+		vel_rhs = vel_rhs_const;
+		const Float Tres = contribute_to_rhs_report_stress_change(vel_rhs);
+		velocity_minimizer.solve(vel_rhs);
+		return Tres;
+	}
+
+	field& vel_rhs_const_part()
+	{return vel_rhs_const;}
+
+	field& vel_rhs_var_part()
+	{return vel_rhs;}
 
 private:
 	Float Bn;      ///< Bingham number
 	Float a;       ///< Augmentation parameter
-	Float alpha;   ///< helper variable
+	Float alpha;   ///< helper const coeficient
 
-	FlowSolver flow_solver;
+	VelocityMinimizationSolver velocity_minimizer;
 	space Xh;    ///< tensor space of Lagrange multipliers
 	field Tau;   ///< Stress Lagrange multiplier
 	field Gam;   ///< Strain rate Lagrange multiplier
 	field Gamdot;  ///< Strain rate of velocity
 	field TminusaG;
+	field vel_rhs;
+	field vel_rhs_const;
 	StrainRateCalculator Gamdot_server;
 	rheolef::form div_ThUh;
 	L2norm_calculator deltaTau;
 
 	template< typename LoopManipulator >
-	void add_rhs( field& rhs, LoopManipulator& obj );
+	void update_lagrangeMultipliers_and_add2velocity_rhs( field& rhs, LoopManipulator& obj );
 
 	struct manip_void {
 		void operator++() const {}
@@ -127,9 +143,10 @@ private:
 
 
 
-template< typename FlowSolver>
+template< typename VelocityMinimizationSolver>
 template< typename LoopManipulator >
-void AugmentedLagrangian_basic<FlowSolver>::add_rhs( field& rhs, LoopManipulator& obj )
+void AugmentedLagrangian_basic<VelocityMinimizationSolver>::
+update_lagrangeMultipliers_and_add2velocity_rhs( field& rhs, LoopManipulator& obj )
 {
 	assert_equal(Gamdot,Tau);
 	//Tensor_itr G(Gam); //for last iteration when want to save...
@@ -145,7 +162,7 @@ void AugmentedLagrangian_basic<FlowSolver>::add_rhs( field& rhs, LoopManipulator
 		Float TaGdot_norm(0.);
 		for( int i=0; i<Tensor_itr::Ncomp; ++i ){
 			TaGdot[i] = T(i)+a_*Gdot(i);
-			TaGdot_norm += Tensor_itr::coef_for_norm_calc[i]*rheolef::sqr(TaGdot[i]); //*TaGdot[i];
+			TaGdot_norm += Tensor_itr::coef_for_norm_calc[i]*rheolef::sqr(TaGdot[i]);
 		}
 		TaGdot_norm = std::sqrt( .5*TaGdot_norm );
 

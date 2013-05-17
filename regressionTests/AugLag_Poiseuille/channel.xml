@@ -9,7 +9,12 @@
     <a>10</a>
     <convergence_limit>1E-5</convergence_limit>
     <max_iteration>100</max_iteration>
-    <reports_frequency>1</reports_frequency>    
+    <reports_frequency>10</reports_frequency>    
+
+   <PBC>
+	<domain_name>left</domain_name>
+	<normal_stress_value>4</normal_stress_value>
+   </PBC>
 
     <Adaptation>
         <cycles>1</cycles>

@@ -13,6 +13,26 @@
 #include "rheolef.h"
 #include "rheolef/solver_abtb.h"
 #include "ConfigXML.h"
+#include <cassert>
+
+typedef rheolef::vec<rheolef::Float> rheo_vec;
+
+class abtb_solver_preconditionedP
+{
+	typedef rheolef::form form;
+
+	form mp;
+	rheolef::solver_abtb solver;
+
+public:
+	abtb_solver_preconditionedP( const XMLConfigFile& cf, const form& a, const form& b ):
+		mp(b.get_second_space(),b.get_second_space(),"mass"),
+		solver( a.uu(), b.uu(), mp.uu() )
+	{}
+
+	void solve( const rheo_vec& urhs, const rheo_vec& prhs, rheo_vec& u, rheo_vec& p ) const
+	{solver.solve(urhs,prhs,u,p);}
+};
 
 
 class BlockSystem_abtb
@@ -22,28 +42,25 @@ class BlockSystem_abtb
 
 	form a;
 	form b;
-	form mp;
-	rheolef::solver_abtb sol;
-
-	void slv( field& Uh, field& Ph, decltype(Uh.u()) rhs ) const
-	{sol.solve( rhs, -(b.ub()*Uh.b()), Uh.set_u(), Ph.set_u() );}
+	rheo_vec p_rhs;
+	abtb_solver_preconditionedP abtb_method;
 
 public:
 	BlockSystem_abtb( const XMLConfigFile& cf, const form& _a, const form& _b ):
 		a(_a),
 		b(_b),
-		mp(_b.get_second_space(),_b.get_second_space(),"mass"),
-		sol( a.uu(), b.uu(), mp.uu() )
+		abtb_method(cf,a,b)
 	{}
 
-	void solve( field& Uh, field& Ph ) const
-	{slv( Uh, Ph, -(a.ub()*Uh.b()) );}
+	void solve( field& Uh, field& Ph, field& rhs ) const
+	{
+		abtb_method.solve( rhs.u(), p_rhs, Uh.set_u(), Ph.set_u() );
+	}
 
-	void solve( field& Uh, field& Ph, const field& rhs ) const
-	{slv( Uh, Ph, rhs.u()-(a.ub()*Uh.b()) );}
-
-//	void solve( field& Uh, field& Ph, const field& urhs, const field& prhs ) const
-//	{sol.solve( urhs.u(), prhs.u(), Uh.set_u(), Ph.set_u() );}
+	void set_discrete_dirichlet_rhs( field& urhs, const field& Uh ){
+		urhs.set_u() = -a.ub()*Uh.b();
+		p_rhs = -( b.ub()*Uh.b() );
+	}
 };
 
 
