@@ -8,6 +8,8 @@
 #ifndef STANDARDAUGMENTEDLAGRANGIAN_H_
 #define STANDARDAUGMENTEDLAGRANGIAN_H_
 
+#include <iostream>
+#include <cstdlib>
 #include "rheolef.h"
 
 #include "CFL.h"

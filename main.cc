@@ -18,6 +18,7 @@
 #include "adaptationCriterions.h"
 #include "StandardAugmentedLagrangian.h"
 #include "DiffusionForms.h"
+#include "AugmentedLagrangianUnitFlow.h"
 
 // saving for restart: is a solver adapter? or new wrapper object?
 /*
@@ -28,10 +29,11 @@
 typedef FlowFields FieldsPool;
 
 typedef IncompLinearDiffusionStokesSolver<BlockSystem_abtb> StokesFlow;
-typedef StandardAugmentedLagrangian<StokesFlow,VoidRHS> SApplication;
+typedef AugmentedLagrangianUnitFlow<StokesFlow,VoidRHS> SApplication;
+//typedef StandardAugmentedLagrangian<StokesFlow,NormalStressBC> SApplication;
 
 typedef SApplication  Application;
-typedef cavityBC  DirichletBoundaryConditions;
+typedef channel_fullBC  DirichletBoundaryConditions;
 //typedef AdaptationLoop<SApplication,DirichletBoundaryConditions>  Application;
 
 

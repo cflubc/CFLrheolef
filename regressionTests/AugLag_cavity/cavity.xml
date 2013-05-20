@@ -8,7 +8,7 @@
     <Bn>10</Bn>
     <a>10</a>
     <convergence_limit>1E-5</convergence_limit>
-    <max_iteration>500</max_iteration>
+    <max_iteration>200</max_iteration>
     <reports_frequency>10</reports_frequency>    
 
     <Adaptation>

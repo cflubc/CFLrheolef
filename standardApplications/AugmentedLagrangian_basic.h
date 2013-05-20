@@ -60,14 +60,15 @@ public:
 	{}
 
 
-	void contribute_to_rhs_fast( field& rhs ){
+	void set_rhs_fast(){    //field& rhs ){
 		const manip_void x;
-		update_lagrangeMultipliers_and_add2velocity_rhs(rhs,x);
+		update_lagrangeMultipliers(x);
+		vel_rhs = div_ThUh*TminusaG;
 	}
 
-	Float contribute_to_rhs_report_stress_change( field& rhs ){
+	Float set_rhs_report_stress_change(){ 	//field& rhs ){
 		deltaTau.save_field();
-		contribute_to_rhs_fast(rhs);
+		set_rhs_fast(); 		//rhs);
 		return deltaTau.calculate_field_change();
 	}
 
@@ -90,22 +91,32 @@ public:
 	}
 
 	void set_rhs_const_part_to_discrete_dirichlet_rhs(){
+		vel_rhs_const = 0.;
 		velocity_minimizer.set_discrete_dirichlet_rhs(vel_rhs_const);
 	}
 
 	void iterate_ntimes( const int niter ){
 		for( int i=0; i<niter; ++i ){
-			vel_rhs = vel_rhs_const;
-			contribute_to_rhs_fast(vel_rhs);
-			velocity_minimizer.solve(vel_rhs);
+			set_rhs_fast(); //vel_rhs);
+			solve_vel_minization();
 		}
 	}
 
+	void iterate()
+	{ iterate_ntimes(1); }
+
 	Float iterate_report_stress_change(){
-		vel_rhs = vel_rhs_const;
-		const Float Tres = contribute_to_rhs_report_stress_change(vel_rhs);
-		velocity_minimizer.solve(vel_rhs);
+		Float const Tres = set_rhs_report_stress_change();
+		solve_vel_minization();
 		return Tres;
+	}
+
+	void build_the_complete_rhs()
+	{vel_rhs += vel_rhs_const;}
+
+	void solve_vel_minization(){
+		build_the_complete_rhs();
+		velocity_minimizer.solve(vel_rhs);
 	}
 
 	field& vel_rhs_const_part()
@@ -132,7 +143,7 @@ private:
 	L2norm_calculator deltaTau;
 
 	template< typename LoopManipulator >
-	void update_lagrangeMultipliers_and_add2velocity_rhs( field& rhs, LoopManipulator& obj );
+	void update_lagrangeMultipliers( LoopManipulator& obj ); //field& rhs,
 
 	struct manip_void {
 		void operator++() const {}
@@ -146,7 +157,7 @@ private:
 template< typename VelocityMinimizationSolver>
 template< typename LoopManipulator >
 void AugmentedLagrangian_basic<VelocityMinimizationSolver>::
-update_lagrangeMultipliers_and_add2velocity_rhs( field& rhs, LoopManipulator& obj )
+update_lagrangeMultipliers( LoopManipulator& obj ) //field& rhs,
 {
 	assert_equal(Gamdot,Tau);
 	//Tensor_itr G(Gam); //for last iteration when want to save...
@@ -167,22 +178,33 @@ update_lagrangeMultipliers_and_add2velocity_rhs( field& rhs, LoopManipulator& ob
 		TaGdot_norm = std::sqrt( .5*TaGdot_norm );
 
 		const Float resi = TaGdot_norm-Bn_;
-		Float coef(0.);
-		if( 0.<resi ){
-			const Float& resi_frac( resi/TaGdot_norm );
+//		Float coef(0.);
+		if( 0.<resi )
+		{
+			const Float resi_frac( resi/TaGdot_norm );
 			obj.set_stress_residual_fraction(resi_frac);
-			coef = alpha_*resi_frac;
+			const Float coef = alpha_*resi_frac;
+			// update of Lagrange multipliers
+			for(int i=0; i<Tensor_itr::Ncomp; ++i){
+				T(i)   = TaGdot[i]*(1.-coef);
+				TmG(i) = TaGdot[i]*(1.-coef-coef);
+				obj.do_extra_stuff( i, TaGdot[i], T(i) );
+	//				G(i)   = TaGdot[i]*coef;
+			}
+		}
+		else
+		{
+			// unyielded, update of Lagrange multipliers
+			for(int i=0; i<Tensor_itr::Ncomp; ++i){
+				T(i)   = TaGdot[i];
+				TmG(i) = TaGdot[i];
+				obj.do_extra_stuff( i, TaGdot[i], T(i) );
+	//				G(i)   = 0.;
+			}
 		}
 
-		// update of Lagrange mults
-		for(int i=0; i<Tensor_itr::Ncomp; ++i){
-			T(i)   = TaGdot[i]*(1.-coef);
-			TmG(i) = TaGdot[i]*(1.-coef-coef);
-			obj.do_extra_stuff( i, TaGdot[i], T(i) );
-//				G(i)   = TaGdot[i]*coef;
-		}
 	}
-	rhs += div_ThUh*TminusaG;
+//	rhs = div_ThUh*TminusaG;
 }
 
 
