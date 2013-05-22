@@ -27,15 +27,32 @@
  */
 
 typedef FlowFields FieldsPool;
-
 typedef IncompLinearDiffusionStokesSolver<BlockSystem_abtb> StokesFlow;
-typedef AugmentedLagrangianUnitFlow<StokesFlow,VoidRHS> SApplication;
-//typedef StandardAugmentedLagrangian<StokesFlow,NormalStressBC> SApplication;
 
-typedef SApplication  Application;
-typedef channel_fullBC  DirichletBoundaryConditions;
+
+struct Problem_ChannelUnitFlow
+{
+	typedef AugmentedLagrangianUnitFlow<StokesFlow,NormalStressBC_RHS> Application; //voidrhs
+	typedef channel_fullBC  BC;
+};
+
+struct Problem_AugmentedLagrangian_SteadyPoiseuille
+{
+	typedef StandardAugmentedLagrangian<StokesFlow,NormalStressBC> Application;
+	typedef channel_fullBC  BC;
+};
+
+struct Problem_AugmentedLagrangian_SteadyCavity
+{
+	typedef StandardAugmentedLagrangian<StokesFlow,VoidRHS> Application;
+	typedef cavityBC BC;
+};
+
+
 //typedef AdaptationLoop<SApplication,DirichletBoundaryConditions>  Application;
-
+typedef Problem_ChannelUnitFlow Problem;
+typedef Problem::BC DirichletBoundaryConditions;
+typedef Problem::Application  Application;
 
 int main(int argc, char** argv )
 {

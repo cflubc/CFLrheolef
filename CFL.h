@@ -33,7 +33,7 @@ write_field( const rheolef::field& f, const char* mark, rheolef::odiststream& o 
 
 void assert_equal( const rheolef::field& f1, const rheolef::field& f2 );
 std::string derivative_approx( const std::string& approx );
-
+void print_solution_convergence_message( bool converged );
 
 
 struct StrainRateCalculator
@@ -79,6 +79,16 @@ public:
 	void reset()
 	{ counter=0; }
 };
+
+
+template< typename IndirectField >
+rheolef::Float vector_dot(IndirectField const& f1, IndirectField const& f2 )
+{
+	rheolef::Float s = 0.;
+	for( auto i1=f1.begin_dof(), i2=f2.begin_dof(); i1!=f1.end_dof(); ++i1,++i2 )
+		s += (*i1)*(*i2);
+	return s;
+}
 
 
 #endif /* CFL_H_ */

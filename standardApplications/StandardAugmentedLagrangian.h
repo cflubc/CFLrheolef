@@ -87,11 +87,7 @@ public:
 			program_output.print(niter,Ures,Tres);
 		} while( (niter<max_iteration) && !residuals_monitor.is_converged() );
 
-		if( residuals_monitor.is_converged() )
-			std::cout << "\nThe solution converged... :-)\n\n";
-		else
-			std::cout << "\nMax limit of iterations reached, stopping...\n\n";
-
+		print_solution_convergence_message( residuals_monitor.is_converged() );
 		AL.write_results();
 		residuals_monitor.save_to_file();
 	}
@@ -99,13 +95,12 @@ public:
 	field adapt_criteria() const
 	{return AL.adapt_criteria();}
 
-
 private:
 	VelocityRHSManipulator rhs_manipulator;
 	AugmentedLagrangian_basic<VelocityMinimizationSolver> AL;
 
-	int max_iteration;
-	int n_iterations_without_report;
+	int const max_iteration;
+	int const n_iterations_without_report;
 	L2norm_calculator Uchange;
 	ConvergenceMonitor residuals_monitor;
 	RecuringAlarm time_to_print_header;

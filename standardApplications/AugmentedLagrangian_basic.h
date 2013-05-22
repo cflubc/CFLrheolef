@@ -60,17 +60,25 @@ public:
 	{}
 
 
-	void set_rhs_fast(){    //field& rhs ){
+	void update_lagrangeMultipliers_fast(){
 		const manip_void x;
 		update_lagrangeMultipliers(x);
-		vel_rhs = div_ThUh*TminusaG;
 	}
 
-	Float set_rhs_report_stress_change(){ 	//field& rhs ){
-		deltaTau.save_field();
-		set_rhs_fast(); 		//rhs);
-		return deltaTau.calculate_field_change();
+	Float update_lagrangeMultipliers_report_stress_change(){
+		save_stress(); //deltaTau.save_field();
+		update_lagrangeMultipliers_fast();
+		return report_stress_change(); //deltaTau.calculate_field_change();
 	}
+
+	void save_stress()
+	{deltaTau.save_field();}
+
+	Float report_stress_change()
+	{return deltaTau.calculate_field_change();}
+
+	field const augmented_lagraniang_rhs() const
+	{return div_ThUh*TminusaG;}
 
 	field adapt_criteria() const {
 		// just scalar version of Th
@@ -91,33 +99,40 @@ public:
 	}
 
 	void set_rhs_const_part_to_discrete_dirichlet_rhs(){
-		vel_rhs_const = 0.;
+//		vel_rhs_const = 0.;
 		velocity_minimizer.set_discrete_dirichlet_rhs(vel_rhs_const);
 	}
 
 	void iterate_ntimes( const int niter ){
 		for( int i=0; i<niter; ++i ){
-			set_rhs_fast(); //vel_rhs);
-			solve_vel_minization();
+			update_lagrangeMultipliers_fast();
+			build_complete_rhs_and_solve_vel_minimization( augmented_lagraniang_rhs() );
+//			vel_rhs = vel_rhs_const + augmented_lagraniang_rhs();
+//			solve_vel_minization();
 		}
 	}
 
 	void iterate()
-	{ iterate_ntimes(1); }
+	{iterate_ntimes(1);}
 
 	Float iterate_report_stress_change(){
-		Float const Tres = set_rhs_report_stress_change();
-		solve_vel_minization();
+		Float const Tres = update_lagrangeMultipliers_report_stress_change();
+		build_complete_rhs_and_solve_vel_minimization( augmented_lagraniang_rhs() );
+//		vel_rhs = vel_rhs_const + augmented_lagraniang_rhs();
+//		solve_vel_minization();
 		return Tres;
 	}
 
-	void build_the_complete_rhs()
-	{vel_rhs += vel_rhs_const;}
-
-	void solve_vel_minization(){
-		build_the_complete_rhs();
-		velocity_minimizer.solve(vel_rhs);
+	void build_complete_rhs_and_solve_vel_minimization( const field& f ){
+		vel_rhs = vel_rhs_const + f;
+		solve_vel_minization();
 	}
+
+//	void build_the_complete_rhs()
+//	{vel_rhs += vel_rhs_const;}
+
+	void solve_vel_minization()
+	{velocity_minimizer.solve(vel_rhs);}
 
 	field& vel_rhs_const_part()
 	{return vel_rhs_const;}
@@ -143,7 +158,7 @@ private:
 	L2norm_calculator deltaTau;
 
 	template< typename LoopManipulator >
-	void update_lagrangeMultipliers( LoopManipulator& obj ); //field& rhs,
+	void update_lagrangeMultipliers( LoopManipulator& obj );
 
 	struct manip_void {
 		void operator++() const {}
@@ -157,7 +172,7 @@ private:
 template< typename VelocityMinimizationSolver>
 template< typename LoopManipulator >
 void AugmentedLagrangian_basic<VelocityMinimizationSolver>::
-update_lagrangeMultipliers( LoopManipulator& obj ) //field& rhs,
+update_lagrangeMultipliers( LoopManipulator& obj )
 {
 	assert_equal(Gamdot,Tau);
 	//Tensor_itr G(Gam); //for last iteration when want to save...
@@ -178,7 +193,6 @@ update_lagrangeMultipliers( LoopManipulator& obj ) //field& rhs,
 		TaGdot_norm = std::sqrt( .5*TaGdot_norm );
 
 		const Float resi = TaGdot_norm-Bn_;
-//		Float coef(0.);
 		if( 0.<resi )
 		{
 			const Float resi_frac( resi/TaGdot_norm );

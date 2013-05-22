@@ -14,21 +14,27 @@
 
 class NormalStressBC_RHS
 {
+	typedef rheolef::field field;
+
 	const rheolef::test v;
-	const std::string domain_name;
 	const double val;
+	const field normalized_rhs;
 
 public:
 	NormalStressBC_RHS( const XMLConfigFile& conf, const rheolef::space& Uspace ):
 		v(Uspace),
-		domain_name( conf("domain_name") ),
-		val( conf.atof("normal_stress_value") )
+		val( conf.atof("normal_stress_value") ),
+		normalized_rhs( -integrate(conf("edge_name"), dot(v,rheolef::normal())) )
 	{}
 
-	void add_to_rhs( rheolef::field& rhs ) const
-	{
-		rhs += integrate( domain_name, -val*dot(v,rheolef::normal()) );
-	}
+	void add_to_rhs( field& rhs ) const
+	{rhs += get_rhs();}
+
+	field get_rhs( double const& x ) const
+	{return x*normalized_rhs;}
+
+	field get_rhs() const
+	{return val*normalized_rhs;}
 };
 
 

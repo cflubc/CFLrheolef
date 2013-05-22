@@ -9,6 +9,7 @@
 #include <string>
 #include <cassert>
 #include <stdexcept>
+#include <cstdio>
 #include "CFL.h"
 
 
@@ -27,4 +28,12 @@ void assert_equal( const rheolef::field& f1, const rheolef::field& f2 )
 {
 	assert( f1.ndof()==f2.ndof() );
 	assert( f1.size()==f2.size() );
+}
+
+void print_solution_convergence_message( bool converged )
+{
+	if( converged )
+		printf("\nThe solution converged... :-)\n\n");
+	else
+		printf("\nMax limit of iterations reached, stopping...\n\n");
 }

@@ -58,6 +58,7 @@ public:
 	}
 
 	void set_discrete_dirichlet_rhs( field& urhs, const field& Uh ){
+		urhs.set_b() = 0.;
 		urhs.set_u() = -a.ub()*Uh.b();
 		p_rhs = -( b.ub()*Uh.b() );
 	}

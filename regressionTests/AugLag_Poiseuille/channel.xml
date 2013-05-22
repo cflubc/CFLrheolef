@@ -9,10 +9,21 @@
     <a>10</a>
     <convergence_limit>1E-5</convergence_limit>
     <max_iteration>100</max_iteration>
-    <reports_frequency>10</reports_frequency>    
+    <reports_frequency>1</reports_frequency>    
+
+   <!--edge_name>left</edge_name-->
+   <flowrate_calculation_edge_name>left</flowrate_calculation_edge_name>
+
+   <Secant>
+      <max_iter>6</max_iter>
+      <target>2.</target>
+      <tolerance>1E-5</tolerance>
+      <initial_point>0 0</initial_point>
+      <next_input>4</next_input>
+   </Secant>
 
    <PBC>
-	<domain_name>left</domain_name>
+	<edge_name>left</edge_name>
 	<normal_stress_value>4</normal_stress_value>
    </PBC>
 
