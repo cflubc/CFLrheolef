@@ -32,10 +32,10 @@ public:
 	AugmentedLagrangianUnitFlow( XMLConfigFile const& conf,
 								 FieldsPool& fields,
 								 DirichletBC BC ):
-		rhs_control(conf.child("PBC"),fields.Uh.get_space()),
+		rhs_control(conf.child("unitflow_rhs_controller"),fields.Uh.get_space()),
 		flowrate(conf("flowrate_calculation_edge_name"),fields.Uh),
-		AL(conf,fields,BC),
-		predictor(conf.child("Secant")),
+		AL(conf.child("AugmentedLagrangian"),fields,BC),
+		predictor( conf.child("Secant") ),
 		max_iteration( conf.atoi("max_iteration") ),
 		n_iterations_without_report( conf.atoi_if_exist("reports_frequency",10)-1 ),
 		Uchange(fields.Uh),

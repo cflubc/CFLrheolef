@@ -10,7 +10,9 @@
 #include <cassert>
 #include <stdexcept>
 #include <cstdio>
+
 #include "CFL.h"
+#include "OperatingSystem.h"
 
 
 std::string derivative_approx( const std::string& approx )
@@ -37,3 +39,11 @@ void print_solution_convergence_message( bool converged )
 	else
 		printf("\nMax limit of iterations reached, stopping...\n\n");
 }
+
+void CFL_mkresult_folder_and_cd_to_it( int iadapt )
+{
+	std::string const name("result"+std::to_string(iadapt));
+	OS::mkdir(name);
+	OS::changedir(name);
+}
+

@@ -24,8 +24,8 @@ struct FlowFields
 
 	template< typename VelDirichletBC >
 	FlowFields( const XMLConfigFile& cf , const geo& _omega, const VelDirichletBC& bc ):
-		Qh( _omega, cf({"FEfields","pspace"}) ),
-		Xh( _omega, cf({"FEfields","vspace"}), "vector" ),
+		Qh( _omega, cf("pspace") ),
+		Xh( _omega, cf("vspace"), "vector" ),
 		Ph(Qh, 0.),
 		omega(_omega)
 	{

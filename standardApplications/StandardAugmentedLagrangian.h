@@ -22,26 +22,18 @@
 
 
 
-class NormalStressBC
-{
-	NormalStressBC_RHS pinlet;
-
-public:
-	template< typename FieldsPool >
-	NormalStressBC( const XMLConfigFile& conf, FieldsPool& fields ):
-		pinlet( conf.child("PBC"),fields.Uh.get_space() )
-	{}
-
-	void add_to_rhs( rheolef::field& rhs ) const
-	{pinlet.add_to_rhs(rhs);}
-};
-
+//struct VoidRHS
+//{
+//	template< typename FieldsPool >
+//	VoidRHS( const XMLConfigFile&, FieldsPool& ) {}
+//	void add_to_rhs( rheolef::field& ) const {}
+//};
 struct VoidRHS
 {
-	template< typename FieldsPool >
-	VoidRHS( const XMLConfigFile&, FieldsPool& ) {}
+	VoidRHS( XMLConfigFile const&, rheolef::space const& ) {}
 	void add_to_rhs( rheolef::field& ) const {}
 };
+
 
 template< typename VelocityMinimizationSolver, typename VelocityRHSManipulator >
 class StandardAugmentedLagrangian
@@ -54,12 +46,12 @@ public:
 	StandardAugmentedLagrangian( const XMLConfigFile& conf,
 								 FieldsPool& fields,
 								 DirichletBC BC ):
-		rhs_manipulator(conf,fields),
-		AL(conf,fields,BC),
+		rhs_manipulator(conf.child("source_term"),fields.Uh.get_space()),
+		AL(conf.child("AugmentedLagrangian"),fields,BC),
 		max_iteration( conf.atoi("max_iteration") ),
 		n_iterations_without_report( conf.atoi_if_exist("reports_frequency",10)-1 ),
 		Uchange(fields.Uh),
-		residuals_monitor("UTconvergence", conf.atof("convergence_limit"), {"|Un+1-Un|","|Tn+1-Tn|"}),
+		residuals_monitor("UTconverge", conf.atof("convergence_limit"), {"|Un+1-Un|","|Tn+1-Tn|"}),
 		time_to_print_header( conf.atoi_if_exist("report_header_reprint_frequency",30) )
 	{}
 

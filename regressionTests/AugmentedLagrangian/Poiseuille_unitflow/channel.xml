@@ -5,13 +5,14 @@
         <vspace>P2</vspace>
     </FEfields>    
 
-    <Bn>1</Bn>
-    <a>10</a>
-    <convergence_limit>1E-5</convergence_limit>
-    <max_iteration>100</max_iteration>
-    <reports_frequency>1</reports_frequency>    
+    <AugmentedLagrangian>
+        <Bn>1</Bn>
+        <a>10</a>             
+    </AugmentedLagrangian>
 
-   <!--edge_name>left</edge_name-->
+   <convergence_limit>1E-5</convergence_limit>
+   <max_iteration>100</max_iteration>
+   <reports_frequency>1</reports_frequency>    
    <flowrate_calculation_edge_name>left</flowrate_calculation_edge_name>
 
    <Secant>
@@ -22,10 +23,9 @@
       <next_input>4</next_input>
    </Secant>
 
-   <PBC>
+   <unitflow_rhs_controller>
 	<edge_name>left</edge_name>
-	<normal_stress_value>4</normal_stress_value>
-   </PBC>
+   </unitflow_rhs_controller>
 
     <Adaptation>
         <cycles>1</cycles>
@@ -34,6 +34,4 @@
         <hmax>.1</hmax>
         <hcoef>4</hcoef>
     </Adaptation>    
-    
-    <BC>dl</BC>
 </data>

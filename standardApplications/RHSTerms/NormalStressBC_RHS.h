@@ -8,9 +8,9 @@
 #ifndef NORMALSTRESSBC_RHS_H_
 #define NORMALSTRESSBC_RHS_H_
 
-#include <string>
 #include "rheolef.h"
 #include "ConfigXML.h"
+
 
 class NormalStressBC_RHS
 {
@@ -21,9 +21,9 @@ class NormalStressBC_RHS
 	const field normalized_rhs;
 
 public:
-	NormalStressBC_RHS( const XMLConfigFile& conf, const rheolef::space& Uspace ):
+	NormalStressBC_RHS( XMLConfigFile const& conf, rheolef::space const& Uspace ):
 		v(Uspace),
-		val( conf.atof("normal_stress_value") ),
+		val( conf.atof_if_exist("normal_stress_value",0.) ),
 		normalized_rhs( -integrate(conf("edge_name"), dot(v,rheolef::normal())) )
 	{}
 

@@ -17,6 +17,8 @@
 
 typedef const char* cstr;
 
+constexpr cstr FieldsPool_Module{"FEfields"};
+
 /**
  * The type used to show that the function is getting several objects
  */
@@ -90,6 +92,7 @@ rheolef::Float vector_dot(IndirectField const& f1, IndirectField const& f2 )
 	return s;
 }
 
+void CFL_mkresult_folder_and_cd_to_it( int iadapt );
 
 #endif /* CFL_H_ */
 
