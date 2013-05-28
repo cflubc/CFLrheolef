@@ -13,9 +13,14 @@
 
 namespace OS {
 
+void run_command( std::string const& command );
 void mkdir( std::string const& directory );
 void changedir( std::string const& directory );
 std::string const& working_directory();
+
+inline void
+chdir_up()
+{changedir("..");}
 
 }
 

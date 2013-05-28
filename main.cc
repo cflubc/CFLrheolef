@@ -6,25 +6,19 @@
  */
 
 #include <cstdlib>
-#include <string>
-#include <iomanip>
+#include <cstring>
+#include <stdexcept>
+
 #include "rheolef.h"
 #include "rheolef/diststream.h"
 
 #include "CFL.h"
 #include "ConfigXML.h"
-#include "MemoryUseage.h"
-#include "BlockSystem_abtb.h"
-#include "BCs.h"
-#include "IncompressibleStokesSolver.h"
 #include "adaptationLoop.h"
 #include "adaptationCriterions.h"
-#include "StandardAugmentedLagrangian.h"
-#include "DiffusionForms.h"
-#include "AugmentedLagrangianUnitFlow.h"
 #include "TimeGauge.h"
-#include "PrintArguments.h"
-#include "OperatingSystem.h"
+#include "Problems.h"
+
 
 // saving for restart: is a solver adapter? or new wrapper object?
 /*
@@ -32,47 +26,36 @@
  * of restart, reads the proper geometry and pass to adapt loop
  */
 
-typedef IncompLinearDiffusionStokesSolver<BlockSystem_abtb> StokesFlow;
+typedef Problem_AugLag_ChannelUnitFlow  Problem;
+typedef Problem::BC  DirichletBoundaryConditions;
+typedef Problem::FieldsPool  FieldsPool;
+typedef Problem::Mesh  Mesh;
+typedef Problem::Application  Application;
+//typedef AdaptationLoop<Problem::Application,Problem::FieldsPool,Problem::BC>  Application;
 
-
-struct Problem_ChannelUnitFlow
-{
-	typedef AugmentedLagrangianUnitFlow<StokesFlow,NormalStressBC_RHS> Application;
-	typedef channel_fullBC  BC;
-	typedef FlowFields FieldsPool;
-};
-
-struct Problem_AugmentedLagrangian_SteadyPoiseuille
-{
-	typedef StandardAugmentedLagrangian<StokesFlow,NormalStressBC_RHS> Application;
-	typedef channel_fullBC  BC;
-	typedef FlowFields FieldsPool;
-};
-
-struct Problem_AugmentedLagrangian_SteadyCavity
-{
-	typedef StandardAugmentedLagrangian<StokesFlow,VoidRHS> Application;
-	typedef cavityBC BC;
-	typedef FlowFields FieldsPool;
-};
-
-
-typedef Problem_AugmentedLagrangian_SteadyPoiseuille Problem;
-typedef Problem::BC DirichletBoundaryConditions;
-typedef Problem::FieldsPool FieldsPool;
-//typedef Problem::Application  Application;
-typedef AdaptationLoop<Problem::Application,Problem::FieldsPool,Problem::BC>  Application;
 
 int main(int argc, char** argv )
 {
 	rheolef::environment env(argc,argv);
-	rheolef::geo omega( argv[1] );
-	XMLConfigFile const conf( argv[2] );
+
+	XMLConfigFile const conf( argv[1] );
+	if( strcmp(Problem::Name,conf("problem"))!=0 )
+		throw std::logic_error("Name of the problem in xml file doesn't match with source code");
 
 	TimeGauge timer;
 	timer.start();
 
-	XMLConfigFile const FE( conf.child(FieldsPool_Module) );
+	XMLConfigFile const meshxml = conf.child("mesh");
+	std::string const base_name = meshxml("name");
+	std::string const geo_file = geo_filename(base_name);
+	Mesh create_meshcad( meshxml, base_name );
+	make_geo_from_bamgcad_and_dmn_file( base_name,meshxml("command_line_args") );
+	plot_mesh(meshxml, geo_file);
+	if(argc==3)
+		exit(0);
+
+	rheolef::geo omega(geo_file);
+	XMLConfigFile const FE( conf.child(CFL_FieldsPool_Module) );
 	DirichletBoundaryConditions BC(FE);
 	FieldsPool fields(FE,omega,BC);
 
@@ -82,11 +65,10 @@ int main(int argc, char** argv )
 
 	timer.stop();
 
-	rheolef::dout << std::setprecision(3);
-	rheolef::dout << "\n--------------------------------\n";
-	print_args(rheolef::dout,"Running time: ",timer.get_time_passed()," hours\n");
-	print_memory_useage( rheolef::dout );
-	rheolef::dout <<   "--------------------------------\n";
+	CFL_print_time_memory_useage(rheolef::dout,timer.get_time_passed());
+	std::ofstream o("useage.info");
+	CFL_print_time_memory_useage(o,timer.get_time_passed());
+	o.close();
 
 	return EXIT_SUCCESS;
 }

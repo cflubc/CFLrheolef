@@ -9,15 +9,28 @@
 #define CFL_H_
 
 #include <string>
+#include <iomanip>
 #include <initializer_list>
 
 #include "rheolef.h"
 #include "rheolef/diststream.h"
 
+#include "MemoryUseage.h"
+#include "PrintArguments.h"
 
 typedef const char* cstr;
 
-constexpr cstr FieldsPool_Module{"FEfields"};
+constexpr cstr CFL_FieldsPool_Module = "FEfields";
+constexpr cstr CFL_SaveFolder_BaseName = "result";
+constexpr static double PI = std::acos(-1);
+
+inline std::string
+domain_filename( std::string const& base )
+{return base+".dmn";}
+
+inline std::string
+geo_filename( std::string const& base )
+{return base+".geo";}
 
 /**
  * The type used to show that the function is getting several objects
@@ -93,6 +106,29 @@ rheolef::Float vector_dot(IndirectField const& f1, IndirectField const& f2 )
 }
 
 void CFL_mkresult_folder_and_cd_to_it( int iadapt );
+
+
+template< typename Stream >
+void CFL_print_time_memory_useage( Stream& s, double const& runtime  )
+{
+	s << std::setprecision(3);
+	s << "\n--------------------------------\n";
+	print_args(s,"Running time: ",runtime," hours\n");
+	print_memory_useage( s );
+	s <<   "--------------------------------\n";
+}
+
+
+class XMLConfigFile;
+/**
+ * put no or remove <plot_mesh_args> part for not plotting the mesh.
+ * all args are sent to rheolef "geo" command. So look at geo manual for
+ * possible arguments. Most important ones are:
+ *  1. "-gnuplot":  to view mesh interactively
+ *  2. "-image-format eps" : to save mesh eps file
+ * @param conf
+ */
+void plot_mesh( XMLConfigFile const& conf, std::string const& geofile );
 
 #endif /* CFL_H_ */
 

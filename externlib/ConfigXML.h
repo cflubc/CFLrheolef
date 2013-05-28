@@ -14,15 +14,17 @@
 #include <initializer_list>
 
 #include "tinyxml.h"
-#include "CFL.h"
+
 
 class XMLConfigFile
 {
+	typedef char const* cstr;
     typedef std::initializer_list<cstr> xmlpath;
     typedef TiXmlElement const* Nodeptr;
 
     Nodeptr rootnode;
     TiXmlDocument doc;
+    std::string const root_path;
 
     bool node_accessible( xmlpath path, Nodeptr& result ) const;
     cstr get_txt( xmlpath path ) const;
@@ -48,6 +50,7 @@ public:
     template< typename T, typename Function >
     T return_if_exist( xmlpath path, T default_val, const Function& f ) const;
 
+    cstr return_txt_if_exist( xmlpath path, cstr const default_val ) const;
 
 	template< typename T >
 	void operator()( xmlpath path, T *const val ) const;
@@ -74,11 +77,11 @@ public:
 
 
 inline
-cstr XMLConfigFile::get_txt( xmlpath path ) const
+XMLConfigFile::cstr XMLConfigFile::get_txt( xmlpath path ) const
 {return find_node(path)->GetText();}
 
 inline
-cstr XMLConfigFile::operator()( xmlpath path ) const
+XMLConfigFile::cstr XMLConfigFile::operator()( xmlpath path ) const
 {return get_txt(path);}
 
 inline
@@ -122,6 +125,12 @@ T XMLConfigFile::return_if_exist( xmlpath path, T default_val, const Function& f
 		return default_val;
 }
 
+inline
+XMLConfigFile::cstr XMLConfigFile::return_txt_if_exist( xmlpath path, cstr const default_val ) const
+{
+	// using c++11 lambda function
+	return return_if_exist(path,default_val,[](cstr s){return s;});
+}
 
 // to convert cstr to initializer_list with one element it is necessary to
 // write type explicity as xmlpath{path}, otherwise {path} is still
@@ -131,7 +140,7 @@ T XMLConfigFile::return_if_exist( xmlpath path, T default_val, const Function& f
 // int  x = {2};   // x: an int!, OK
 
 inline
-cstr XMLConfigFile::operator()( cstr one_path ) const
+XMLConfigFile::cstr XMLConfigFile::operator()( cstr one_path ) const
 {return get_txt( xmlpath{one_path} );}
 
 inline

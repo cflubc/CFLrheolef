@@ -11,9 +11,18 @@
 #include <unistd.h>
 
 #include <cstdlib>
+#include <cstdio>
 #include "OperatingSystem.h"
 
 namespace OS {
+
+
+void run_command( std::string const& command )
+{
+	printf( "[Execute] %s\n", command.c_str() );
+	int sys_res = system( command.c_str() );
+}
+
 
 void mkdir( std::string const& directory )
 {

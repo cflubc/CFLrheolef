@@ -48,7 +48,7 @@ public:
 			                     	   DirichletBC& BC,
 			                     	  const rheolef::Float D=1. ):
 		IncompLinearDiffusionStokesSolver( conf, fields,
-				     D*rheolef::form(fields.Uh.get_space(),fields.Uh.get_space(),"2D_D") )
+				     D*rheolef::form(fields.Uspace(),fields.Uspace(),"2D_D") )
 	{}
 
 
@@ -56,8 +56,8 @@ public:
 	IncompLinearDiffusionStokesSolver( const XMLConfigFile& conf,
 			                     	   FieldsPool& fields,
 			                     	   const DiffusionForm& Dform ):
-		uh(fields.Uh),
-		ph(fields.Ph),
+		uh(fields.Uh()),
+		ph(fields.Ph()),
 		solver( conf, Dform, -rheolef::form(uh.get_space(),ph.get_space(),"div") )
 	{}
 

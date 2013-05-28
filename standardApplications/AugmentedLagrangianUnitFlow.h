@@ -9,6 +9,7 @@
 #define AUGMENTEDLAGRANGIANUNITFLOW_H_
 
 #include <cstdlib>
+#include <cmath>
 #include "rheolef.h"
 
 #include "ConfigXML.h"
@@ -32,13 +33,13 @@ public:
 	AugmentedLagrangianUnitFlow( XMLConfigFile const& conf,
 								 FieldsPool& fields,
 								 DirichletBC BC ):
-		rhs_control(conf.child("unitflow_rhs_controller"),fields.Uh.get_space()),
-		flowrate(conf("flowrate_calculation_edge_name"),fields.Uh),
+		rhs_control(conf.child("unitflow_rhs_controller"),fields.Uspace()),
+		flowrate(conf("flowrate_calculation_edge_name"),fields.Uh()),
 		AL(conf.child("AugmentedLagrangian"),fields,BC),
 		predictor( conf.child("Secant") ),
 		max_iteration( conf.atoi("max_iteration") ),
 		n_iterations_without_report( conf.atoi_if_exist("reports_frequency",10)-1 ),
-		Uchange(fields.Uh),
+		Uchange(fields.Uh()),
 		residuals_monitor("UTCconverge",conf.atof("convergence_limit"),{"|Un+1-Un|","|Tn+1-Tn|","Control"})
 	{}
 
@@ -52,12 +53,12 @@ public:
 
 		do {
 			for(int i=0; i<n_iterations_without_report; ++i)
-				iterate(dirichlet_rhs);
+				uniflow_iteration(dirichlet_rhs);
 			niter += n_iterations_without_report;
 
 			Uchange.save_field();
 			AL.save_stress();
-			iterate(dirichlet_rhs);
+			uniflow_iteration(dirichlet_rhs);
 			Float const Ures = Uchange.calculate_field_change();
 			Float const Tres = AL.report_stress_change();
 			residuals_monitor.add_point(++niter,{Ures,Tres,predictor.get_input()});
@@ -69,7 +70,9 @@ public:
 		residuals_monitor.save_to_file();
 	}
 
-	void iterate( field const& dirichlet_rhs )
+private:
+
+	void uniflow_iteration( field const& dirichlet_rhs )
 	{
 		predictor.reset();
 		// unit flow secant loop
@@ -77,14 +80,13 @@ public:
 		{
 			AL.build_complete_rhs_and_solve_vel_minimization(
 					rhs_control.get_rhs(predictor.get_input()) );
-			Float const flux = rheolef::abs( flowrate.calc_flux() );
+			Float const flux = fabs( flowrate.calc_flux() );
 			predictor.predict_new_input(flux);
 		}
 		AL.update_lagrangeMultipliers_fast();
 		AL.vel_rhs_const_part() = AL.augmented_lagraniang_rhs() + dirichlet_rhs;
 	}
 
-private:
 	VelocityRHSManipulator rhs_control;
 	BorderFluxCalculator const flowrate;
 	AugmentedLagrangian_basic<VelocityMinimizationSolver> AL;

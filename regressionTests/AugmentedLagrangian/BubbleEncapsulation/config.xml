@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+    <problem>AugLag_BubbleEncapsulation</problem>
+
+    <FEfields>
+        <pspace>P1</pspace>
+        <vspace>P2</vspace>
+    </FEfields>    
+
+    <AugmentedLagrangian>
+        <Bn>1</Bn>
+        <a>10</a>             
+    </AugmentedLagrangian>
+
+   <convergence_limit>1E-5</convergence_limit>
+   <max_iteration>300</max_iteration>
+   <reports_frequency>10</reports_frequency>    
+
+   <source_term>
+       <normal_stress_value>4</normal_stress_value>
+       <edge_name>left</edge_name>
+   </source_term>
+
+   <mesh>
+      <name>bubble</name>
+      <channel_length>3</channel_length>
+      <channel_width>1</channel_width>
+      <bubble_length>1</bubble_length>
+      <bubble_width>.2</bubble_width>
+      <bubble_curve_dteta_limit>.25</bubble_curve_dteta_limit>
+      <type>symx</type>
+      <command_line_args>-hmax .1</command_line_args>
+      <plot_mesh_args>-gnuplot</plot_mesh_args>
+   </mesh>
+
+    <Adaptation>
+        <cycles>2</cycles>
+        <max_vertices>10000</max_vertices>
+        <hmin>.001</hmin>
+        <hmax>.1</hmax>
+        <hcoef>6</hcoef>
+        <err>2E-3</err>
+        <n_vertices_max>50000</n_vertices_max>
+        <additional>-AbsError</additional>
+    </Adaptation>    
+</data>

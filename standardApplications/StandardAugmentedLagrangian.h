@@ -46,14 +46,15 @@ public:
 	StandardAugmentedLagrangian( const XMLConfigFile& conf,
 								 FieldsPool& fields,
 								 DirichletBC BC ):
-		rhs_manipulator(conf.child("source_term"),fields.Uh.get_space()),
+		rhs_manipulator(conf.child("source_term"),fields.Uspace()),
 		AL(conf.child("AugmentedLagrangian"),fields,BC),
 		max_iteration( conf.atoi("max_iteration") ),
 		n_iterations_without_report( conf.atoi_if_exist("reports_frequency",10)-1 ),
-		Uchange(fields.Uh),
+		Uchange(fields.Uh()),
 		residuals_monitor("UTconverge", conf.atof("convergence_limit"), {"|Un+1-Un|","|Tn+1-Tn|"}),
 		time_to_print_header( conf.atoi_if_exist("report_header_reprint_frequency",30) )
 	{}
+
 
 	void run()
 	{

@@ -47,14 +47,14 @@ public:
 		a( conf.atof("a") ),
 		alpha( a/(1.+a) ),
 		velocity_minimizer(conf,fields,BC,a),
-		Xh(fields.Uh.get_geo(), derivative_approx(fields.Uh.get_approx()), "tensor"),
+		Xh(fields.get_geo(), derivative_approx(fields.Uh().get_approx()), "tensor"),
 		Tau(Xh, 0.),
 		Gam(Xh, 0.),
 		Gamdot(Xh, 0.),
 		TminusaG(Xh, 0.),
-		vel_rhs(fields.Uh.get_space(), 0.),
+		vel_rhs(fields.Uspace(), 0.),
 		vel_rhs_const(vel_rhs.get_space(), 0.),
-		Gamdot_server(fields.Uh),
+		Gamdot_server(fields.Uh()),
 		div_ThUh( -.5*trans(Gamdot_server.set_desired_strainrate_space(Xh)) ),
 		deltaTau(Tau)
 	{}
@@ -66,9 +66,9 @@ public:
 	}
 
 	Float update_lagrangeMultipliers_report_stress_change(){
-		save_stress(); //deltaTau.save_field();
+		save_stress();
 		update_lagrangeMultipliers_fast();
-		return report_stress_change(); //deltaTau.calculate_field_change();
+		return report_stress_change();
 	}
 
 	void save_stress()

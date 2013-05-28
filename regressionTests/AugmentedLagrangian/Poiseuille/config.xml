@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <data>
+    <problem>AugLag_SteadyPoiseuille</problem>
+
     <FEfields>
         <pspace>P1</pspace>
         <vspace>P2</vspace>
@@ -11,7 +13,7 @@
     </AugmentedLagrangian>
 
    <convergence_limit>1E-5</convergence_limit>
-   <max_iteration>100</max_iteration>
+   <max_iteration>300</max_iteration>
    <reports_frequency>10</reports_frequency>    
 
    <source_term>
@@ -19,11 +21,23 @@
        <edge_name>left</edge_name>
    </source_term>
 
+   <mesh>
+      <name>channel</name>
+      <type>full</type>
+      <width>1</width>
+      <length>1</length>
+      <command_line_args>-hmax .1</command_line_args>
+      <plot_mesh_args>-gnuplot</plot_mesh_args>
+   </mesh>
+
     <Adaptation>
-        <cycles>4</cycles>
+        <cycles>2</cycles>
         <max_vertices>10000</max_vertices>
         <hmin>.001</hmin>
         <hmax>.1</hmax>
         <hcoef>6</hcoef>
+        <err>2E-3</err>
+        <n_vertices_max>50000</n_vertices_max>
+        <additional>-RelError</additional>
     </Adaptation>    
 </data>

@@ -22,6 +22,8 @@ struct FixedStrategy
 		conf("hmax",&opts.hmax);
 		conf("hcoef",&opts.hcoef);
 		conf("cycles",&n_adapt);
+		conf("err",&opts.err);
+		conf("additional",&opts.additional);
 	}
 
 	template< typename Application >

@@ -47,24 +47,19 @@ public:
 	{return secant.predict_new_input(f2);}
 
 private:
-
-	struct Float_abs {
-		static Float abs( Float const& x )
-		{return rheolef::abs(x);}
-	};
-	SecantMethod<Float,Float_abs> secant;
+	SecantMethod<Float> secant;
 
 	static cstr init_point_str( XMLConfigFile const& cf )
 	{return cf("initial_point");}
 
-	static Float x1( cstr str ){
+	static Float x1( cstr const str ){
 		std::istringstream s(str);
 		Float x1;
 		s >> x1;
 		return x1;
 	}
 
-	static Float f1( cstr str ){
+	static Float f1( cstr const str ){
 		std::istringstream s(str);
 		Float f1;
 		s >> f1;

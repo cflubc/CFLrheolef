@@ -13,33 +13,21 @@
 #include <cmath>
 
 
-template< typename T >
-struct standard_abs
-{
-	static T abs( T const& x )
-	{return std::abs(x);}
-};
-
-
 /**
  * Secant method for a function f with input parameter x.
- * @see en.wikipedia.org/wiki/Secant_method @see
+ * @see en.wikipedia.org/wiki/Secant_method
  *
- * We have data of points 1,2 and predict the required x to reach the
- * target value from funciton using a linear approximation of function.
- *
- * The class needs to compute abs, for standard types like double,float
- * we use the standard library. But for other types (e.g. rheolef::Float)
- * the user should provide a function object which returns the absolute value.
+ * We have data of points 1,2 and predict the required x to reach
+ * the target value using a linear approximation of function.
  */
-template< typename T = double, typename absFunctor = standard_abs<T> >
+template< typename T = double >
 class SecantMethod
 {
-	const T target;
+	T const target;
+	T const tolerance;
 	T f1;
 	T x2;
 	T dx;
-	T tolerance;
 	size_t max_iter;
 	size_t iter;
 	bool converged;
@@ -47,10 +35,10 @@ class SecantMethod
 public:
 	SecantMethod( size_t nmax, T const& tol, T const& _target, T const& x1, T const& _f1, T const& _x2 ):
 		target(_target),
+		tolerance(tol),
 		f1(_f1),
 		x2(_x2),
 		dx(_x2-x1),
-		tolerance(tol),
 		max_iter(nmax),
 		iter(0),
 		converged(false)
@@ -74,13 +62,13 @@ public:
 };
 
 
-template< typename T, typename absFunctor >
-T SecantMethod<T,absFunctor>::predict_new_input( T const& f2 )
+template< typename T >
+T SecantMethod<T>::predict_new_input( T const& f2 )
 {
 	assert(f1!=f2);
 
 	T const dtarget = target-f2;
-	converged = absFunctor::abs(dtarget)<tolerance;
+	converged = fabs(dtarget)<tolerance;
 	if( !converged ){
 		++iter;
 		dx = dx/(f2-f1)*dtarget;

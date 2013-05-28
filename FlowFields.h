@@ -26,7 +26,7 @@ struct FlowFields
 	FlowFields( const XMLConfigFile& cf , const geo& _omega, const VelDirichletBC& bc ):
 		Qh( _omega, cf("pspace") ),
 		Xh( _omega, cf("vspace"), "vector" ),
-		Ph(Qh, 0.),
+		ph(Qh, 0.),
 		omega(_omega)
 	{
 		// Pressure is Lag multiplier we never block it's space (even if we
@@ -35,21 +35,33 @@ struct FlowFields
 		// pressure contribution to rhs of velocity and the correct value
 		// automatically is obtained. (note this is for incompressible flow)
 		bc.block_velocity_space(Xh);
-		Uh = rheolef::field(Xh, 0.);
-		bc.set_velocity_dirichlet(Uh);
+		uh = rheolef::field(Xh, 0.);
+		bc.set_velocity_dirichlet(uh);
 	}
 
 	void write_fields( rheolef::odiststream& o ) const
 	{
-		write_field(Uh,"u",o);
-		write_field(Ph,"p",o);
+		write_field(uh,"u",o);
+		write_field(ph,"p",o);
 	}
+
+	geo const& get_geo() const
+	{return omega;}
+
+	space const& Uspace() const
+	{return Xh;}
+
+	field const& Uh() const {return uh;}
+	field const& Ph() const {return ph;}
+	field      & Uh()       {return uh;}
+	field      & Ph()       {return ph;}
+
 
 	space Qh;
 	space Xh;
 
-	field Ph;
-	field Uh;
+	field ph;
+	field uh;
 	const geo& omega;
 };
 

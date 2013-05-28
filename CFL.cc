@@ -6,13 +6,16 @@
  */
 
 
-#include <string>
+#include <cstring>
 #include <cassert>
-#include <stdexcept>
 #include <cstdio>
+
+#include <string>
+#include <stdexcept>
 
 #include "CFL.h"
 #include "OperatingSystem.h"
+#include "ConfigXML.h"
 
 
 std::string derivative_approx( const std::string& approx )
@@ -42,8 +45,18 @@ void print_solution_convergence_message( bool converged )
 
 void CFL_mkresult_folder_and_cd_to_it( int iadapt )
 {
-	std::string const name("result"+std::to_string(iadapt));
+	std::string const name(CFL_SaveFolder_BaseName+std::to_string(iadapt));
 	OS::mkdir(name);
 	OS::changedir(name);
+}
+
+
+void plot_mesh( XMLConfigFile const& conf, std::string const& geofile )
+{
+	cstr const no_disp = "no";
+	cstr const args = conf.return_txt_if_exist({"plot_mesh_args"},no_disp);
+	if( strcmp(no_disp,args)==0 )
+		return;
+	OS::run_command( "geo "+geofile+" "+args );
 }
 
