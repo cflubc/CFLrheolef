@@ -48,7 +48,6 @@ public:
 		bc(BC),
 		base_name(fields.get_geo().name())
 	{
-		strategy.set_cycle(0);
 		Application app(conf,fields,bc);
 		strategy.run_app(app);
 		criteria = app.adapt_criteria();
@@ -59,9 +58,8 @@ public:
 	{
 		for(int i=1; i<=strategy.n_adapt; ++i)
 		{
-			strategy.set_cycle(i);
 			OS::chdir_up();
-			rheolef::geo const omega = rheolef::adapt( criteria, strategy.opt() );
+			rheolef::geo const omega = rheolef::adapt( criteria, strategy.opt(i-1) );
 			FieldsPool fields(conf.child(CFL_FieldsPool_Module),omega,bc);
 			Application app(conf,fields,bc);
 			CFL_mkresult_folder_and_cd_to_it(i);

@@ -8,7 +8,7 @@
 #ifndef CONVERGENCEMONITOR_H_
 #define CONVERGENCEMONITOR_H_
 
-#include <cstdlib>
+#include <cstddef>
 #include <vector>
 #include <string>
 #include <initializer_list>
@@ -17,25 +17,32 @@
 class ConvergenceMonitor
 {
 	typedef std::string string;
+	typedef std::size_t size_t;
 	typedef const char* cstr;
-	typedef std::vector<double> convergence_history;
-
-	string file_name_base;
-	double absolute_error;
-	std::vector<size_t> iteration;
-	std::vector<cstr> param_names;
-	std::vector<convergence_history> converge_histories;
 
 	size_t n_parameters() const
 	{ return param_names.size(); }
 
 public:
-	ConvergenceMonitor( const string& name,
-			            const double& error_limit,
-			            std::initializer_list<cstr> names );
 
-	void add_point( const size_t& iter, std::initializer_list<double> vals );
-	bool is_converged() const;
+	typedef std::vector<double> convergence_history;
+
+	ConvergenceMonitor( string const& file_name,
+			            std::initializer_list<cstr> param_names );
+//			            ,double const& error_limit = 1e-3 );
+
+	void add_point( const size_t iter, std::initializer_list<double> vals );
+
+	bool is_converged( double const& err ) const;
+
+	convergence_history const& operator[]( size_t i )
+	{return converge_histories[i];}
+
+	void rename_and_init( string const& name,
+			     	 	  std::initializer_list<cstr> names );
+//			     	 	  ,double const& error_limit );
+
+	void clear();
 
 	/**
 	 * Save convergence history in file. Name of saved file is the given
@@ -46,8 +53,16 @@ public:
 	 * This function also generates eps plot of parameters(gnuplot)
 	 */
 	void save_to_file( const string& suffix="" ) const;
-};
 
+
+private:
+
+	string file_name_base;
+//	double absolute_error;
+	std::vector<size_t> iteration;
+	std::vector<cstr> param_names;
+	std::vector<convergence_history> converge_histories;
+};
 
 
 #endif /* CONVERGENCEMONITOR_H_ */

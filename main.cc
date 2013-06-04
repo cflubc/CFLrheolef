@@ -26,12 +26,13 @@
  * of restart, reads the proper geometry and pass to adapt loop
  */
 
-typedef Problem_AugLag_ChannelUnitFlow  Problem;
+typedef Problem_AugLag_BubbleEncapsulation  Problem;
 typedef Problem::BC  DirichletBoundaryConditions;
 typedef Problem::FieldsPool  FieldsPool;
 typedef Problem::Mesh  Mesh;
-typedef Problem::Application  Application;
-//typedef AdaptationLoop<Problem::Application,Problem::FieldsPool,Problem::BC>  Application;
+//typedef Problem::Application  Application;
+typedef AdaptationLoop<Problem::Application,Problem::FieldsPool,Problem::BC>  Application;
+
 
 
 int main(int argc, char** argv )

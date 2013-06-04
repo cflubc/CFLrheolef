@@ -9,6 +9,7 @@
 #define CFL_H_
 
 #include <string>
+#include <sstream>
 #include <iomanip>
 #include <initializer_list>
 
@@ -32,6 +33,11 @@ inline std::string
 geo_filename( std::string const& base )
 {return base+".geo";}
 
+
+inline void
+operator>>( std::istringstream& is, rheolef::point& p )
+{p.get(is);}
+
 /**
  * The type used to show that the function is getting several objects
  */
@@ -45,6 +51,21 @@ write_field( const rheolef::field& f, const char* mark, rheolef::odiststream& o 
 	o << rheolef::catchmark(mark);
 	o << f;
 }
+
+inline void
+write_to_diststream( rheolef::odiststream& o )
+{}
+
+template< typename T, typename... Args >
+inline void
+write_to_diststream( rheolef::odiststream& o, std::string const& mark, T const& t, Args const&... args )
+{
+	o << rheolef::catchmark(mark);
+	o << t;
+	o << '\n';
+	write_to_diststream(o,args...);
+}
+
 
 void assert_equal( const rheolef::field& f1, const rheolef::field& f2 );
 std::string derivative_approx( const std::string& approx );
@@ -77,27 +98,8 @@ struct StrainRateCalculator
 };
 
 
-class RecuringAlarm
-{
-	int n_recuring;
-	int counter;
-
-public:
-	RecuringAlarm( int n, int initval=0 ):
-		n_recuring(n),
-		counter(initval)
-	{}
-
-	bool alarm_ringing()
-	{ return (counter++%n_recuring)==0; }
-
-	void reset()
-	{ counter=0; }
-};
-
-
-template< typename IndirectField >
-rheolef::Float vector_dot(IndirectField const& f1, IndirectField const& f2 )
+template< typename Field >
+rheolef::Float vector_dot(Field const& f1, Field const& f2 )
 {
 	rheolef::Float s = 0.;
 	for( auto i1=f1.begin_dof(), i2=f2.begin_dof(); i1!=f1.end_dof(); ++i1,++i2 )

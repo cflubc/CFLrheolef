@@ -21,6 +21,7 @@ class CFLSecantMethod
 	typedef rheolef::Float Float;
 
 public:
+
 	CFLSecantMethod( XMLConfigFile const& conf ):
 		secant( conf.atoi("max_iter"),
 				conf.atof("tolerance"),
@@ -34,6 +35,9 @@ public:
 	void reset()
 	{secant.reset();}
 
+	void set_tolerance_and_Maxiteration( Float const& tol, size_t const n )
+	{secant.set_tolerance_and_Maxiteration(tol,n);}
+
 	size_t n_iterations_done() const
 	{return secant.n_iterations_done();}
 
@@ -45,6 +49,12 @@ public:
 
 	Float predict_new_input( Float const& f2 )
 	{return secant.predict_new_input(f2);}
+
+	Float get_last_input_change() const
+	{return secant.get_last_input_change();}
+
+	Float difference_from_last_output( Float const& f ) const
+	{return secant.difference_from_last_output(f);}
 
 private:
 	SecantMethod<Float> secant;

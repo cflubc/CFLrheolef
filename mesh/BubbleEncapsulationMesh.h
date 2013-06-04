@@ -42,7 +42,7 @@ public:
 		else if( type=="symxy" )
 			symxy(base_name);
 		else
-			throw std::logic_error("Wrong type of Bubble mesh");
+			throw std::logic_error("Wrong type of Bubble mesh, either symx/symxy");
 	}
 
 	void symxy( string const& base_name )

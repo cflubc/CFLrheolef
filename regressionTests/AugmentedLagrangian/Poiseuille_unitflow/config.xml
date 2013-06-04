@@ -8,44 +8,63 @@
     </FEfields> 
 
     <AugmentedLagrangian>
-        <Bn>1</Bn>
+        <Bn>4.8</Bn>
         <a>10</a>      
     </AugmentedLagrangian>
 
-   <convergence_limit>1E-5</convergence_limit>
-   <flowrate_calculation_edge_name>left</flowrate_calculation_edge_name>
-   <max_iteration>300</max_iteration>
-   <reports_frequency>10</reports_frequency>   
-
-   <Secant>
-       <max_iter>6</max_iter>
-       <tolerance>1E-3</tolerance>
-       <target>2.</target>
-       <initial_point>0 0</initial_point>
-       <next_input>4.</next_input>
-   </Secant>
-
    <unitflow_rhs_controller>
        <edge_name>left</edge_name>
+	   <!--bodyforce_vector>1 0 0</bodyforce_vector-->
    </unitflow_rhs_controller>
+
+   <flowrate_calculation_edge_name>left</flowrate_calculation_edge_name>
+   <report_header_reprint_frequency>30</report_header_reprint_frequency>
+
+   <LowResolution_step>
+      <SteadyAnalyser>
+	     <n_points_to_monitor>10</n_points_to_monitor>
+         <normalized_deviation_limit>.001</normalized_deviation_limit>
+      </SteadyAnalyser>
+
+      <Secant>
+         <max_iter>6</max_iter>
+         <tolerance>1E-3</tolerance>
+         <target>2.</target>
+         <initial_point>0 0</initial_point>
+         <next_input>3.</next_input>
+      </Secant>
+
+      <max_iteration>500</max_iteration>
+      <reports_frequency>40</reports_frequency>   
+   </LowResolution_step>
+
+   <HighResolution_step>
+      <max_iteration>3</max_iteration>
+      <flowrate_convergence_limit>1E-5</flowrate_convergence_limit>
+
+      <AugmentedLag>
+         <reports_frequency>50</reports_frequency>
+         <convergence_limit>1E-5</convergence_limit>
+         <max_iteration>500</max_iteration>
+         <min_iteration>200</min_iteration>
+      </AugmentedLag>
+   </HighResolution_step>
 
    <mesh>
       <name>channel</name>
       <type>full</type>
       <width>2</width>
-      <length>1</length>
+      <length>.5</length>
       <command_line_args>-hmax .1</command_line_args>
-      <plot_mesh_args>-gnuplot</plot_mesh_args>
+      <plot_mesh_args>no</plot_mesh_args>
    </mesh>
 
     <Adaptation>
-        <cycles>2</cycles>
-        <max_vertices>10000</max_vertices>
+        <cycles>4</cycles>
         <hmin>.001</hmin>
-        <hmax>.1</hmax>
+        <hmax>.05</hmax>
         <hcoef>6</hcoef>
-        <err>2E-3</err>
-        <n_vertices_max>50000</n_vertices_max>
-        <additional>-RelError</additional>
+        <err>3E-3</err>
+        <n_vertices_max>10000</n_vertices_max>
     </Adaptation>    
 </data>

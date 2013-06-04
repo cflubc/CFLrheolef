@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <vector>
 #include <initializer_list>
 
 #include "tinyxml.h"
@@ -22,22 +23,23 @@ class XMLConfigFile
     typedef std::initializer_list<cstr> xmlpath;
     typedef TiXmlElement const* Nodeptr;
 
+    std::string const root_path;
     Nodeptr rootnode;
     TiXmlDocument doc;
-    std::string const root_path;
 
     bool node_accessible( xmlpath path, Nodeptr& result ) const;
     cstr get_txt( xmlpath path ) const;
+    static std::string path_string( xmlpath path );
 
 public:
     Nodeptr find_node( xmlpath path ) const;
-    static void print_path(xmlpath path );
 
-    XMLConfigFile( Nodeptr node ):
+    XMLConfigFile( Nodeptr node, std::string const& parent_path ):
+    	root_path(parent_path),
     	rootnode(node)
     {}
 
-    XMLConfigFile( cstr fname );
+    XMLConfigFile( const cstr fname );
     XMLConfigFile child( xmlpath path ) const;
 
     cstr operator()( xmlpath  path ) const;
@@ -55,8 +57,15 @@ public:
 	template< typename T >
 	void operator()( xmlpath path, T *const val ) const;
 
+	template< typename T >
+	T operator()( xmlpath path, T val ) const;
+
+
     template< typename T >
     void set_if_path_exist( xmlpath path, T *const val ) const;
+
+    template< typename T >
+    T get_if_path_exist( xmlpath path, T default_val ) const;
 
 
     ///< convinient functions to avoid writing {} when path is only one element
@@ -70,6 +79,9 @@ public:
     template< typename T >
 	void operator()( cstr one_path, T *const val ) const;
 
+    template< typename T>
+    T operator()( cstr one_path, T val ) const;
+
     template< typename T >
     void set_if_path_exist( cstr one_path, T *const val ) const;
 };
@@ -77,28 +89,37 @@ public:
 
 
 inline
-XMLConfigFile::cstr XMLConfigFile::get_txt( xmlpath path ) const
+XMLConfigFile::cstr
+XMLConfigFile::get_txt( xmlpath path ) const
 {return find_node(path)->GetText();}
 
 inline
-XMLConfigFile::cstr XMLConfigFile::operator()( xmlpath path ) const
+XMLConfigFile::cstr
+XMLConfigFile::operator()( xmlpath path ) const
 {return get_txt(path);}
 
 inline
-XMLConfigFile XMLConfigFile::child( xmlpath path ) const
-{ return XMLConfigFile( find_node(path) ); }
+XMLConfigFile
+XMLConfigFile::child( xmlpath path ) const
+{ return XMLConfigFile( find_node(path), path_string(path) ); }
 
 
 template< typename T >
-inline
 void XMLConfigFile::operator()( xmlpath path, T *const val ) const
 {
-	std::stringstream ss( get_txt(path) );
+	std::istringstream ss( get_txt(path) );
 	ss >> *val;
 }
 
 template< typename T >
-inline
+T XMLConfigFile::operator()( xmlpath path, T val ) const
+{
+	operator()(path,&val);
+	return val;
+}
+
+
+template< typename T >
 void XMLConfigFile::set_if_path_exist( xmlpath path, T *const val ) const
 {
 	Nodeptr nd;
@@ -106,12 +127,23 @@ void XMLConfigFile::set_if_path_exist( xmlpath path, T *const val ) const
 		operator()(path,val);
 }
 
-inline
-int XMLConfigFile::atoi( xmlpath path ) const
+
+template< typename T >
+T XMLConfigFile::get_if_path_exist( xmlpath path, T default_val ) const
+{
+	Nodeptr nd;
+	if( node_accessible(path,nd) )
+		operator()(path,&default_val);
+	return default_val;
+}
+
+
+inline int
+XMLConfigFile::atoi( xmlpath path ) const
 {return ::atoi( get_txt(path) );}
 
-inline
-double XMLConfigFile::atof( xmlpath path ) const
+inline double
+XMLConfigFile::atof( xmlpath path ) const
 {return ::atof( get_txt(path) );}
 
 
@@ -121,15 +153,27 @@ T XMLConfigFile::return_if_exist( xmlpath path, T default_val, const Function& f
 	Nodeptr nd;
 	if( node_accessible(path,nd) )
 		return f( nd->GetText() );
-	else
-		return default_val;
+	return default_val;
 }
 
 inline
-XMLConfigFile::cstr XMLConfigFile::return_txt_if_exist( xmlpath path, cstr const default_val ) const
+XMLConfigFile::cstr
+XMLConfigFile::return_txt_if_exist( xmlpath path, cstr const default_val ) const
 {
 	// using c++11 lambda function
 	return return_if_exist(path,default_val,[](cstr s){return s;});
+}
+
+
+template< typename T >
+void operator>>( std::istream& is, std::vector<T>& vec )
+{
+	while( !is.eof() )
+	{
+		T tmp;
+		is >> tmp;
+		vec.push_back(tmp);
+	}
 }
 
 // to convert cstr to initializer_list with one element it is necessary to
@@ -139,18 +183,24 @@ XMLConfigFile::cstr XMLConfigFile::return_txt_if_exist( xmlpath path, cstr const
 // auto x = {2};   // x: initializer_list of int, OK
 // int  x = {2};   // x: an int!, OK
 
-inline
-XMLConfigFile::cstr XMLConfigFile::operator()( cstr one_path ) const
+inline XMLConfigFile::cstr
+XMLConfigFile::operator()( cstr one_path ) const
 {return get_txt( xmlpath{one_path} );}
 
-inline
-XMLConfigFile XMLConfigFile::child( cstr one_path ) const
+inline XMLConfigFile
+XMLConfigFile::child( cstr one_path ) const
 {return child( xmlpath{one_path} );}
 
 template< typename T >
-inline
-void XMLConfigFile::operator()( cstr one_path, T *const val ) const
+inline void
+XMLConfigFile::operator()( cstr one_path, T *const val ) const
 {operator()(xmlpath{one_path},val);}
+
+template< typename T>
+inline T
+XMLConfigFile::operator()( cstr one_path, T val ) const
+{return operator()(xmlpath{one_path},val);}
+
 
 inline
 int XMLConfigFile::atoi( cstr one_path ) const
@@ -168,6 +218,19 @@ inline
 int XMLConfigFile::atoi_if_exist( cstr one_path, int default_val ) const
 { return atoi_if_exist(xmlpath{one_path},default_val); }
 
+
+#define XML_VAL(xmlconf,var,path) \
+	xmlconf(path,var)
+
+#define XML_VAL_IF_EXIST(xmlconf,default_val,path) \
+	xmlconf.get_if_path_exist({path},default_val)
+
+
+#define XML_INIT_VAR(xmlconf,var,path) \
+	var( XML_VAL(xmlconf,var,path) )
+
+#define XML_INIT_VAR_IF_EXIST(xmlconf,var,default_val,path) \
+	var( XML_VAL_IF_EXIST(xmlconf,default_val,path) )
 
 
 #endif

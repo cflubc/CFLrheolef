@@ -11,7 +11,8 @@
 #include "ConfigXML.h"
 
 
-XMLConfigFile::XMLConfigFile( const char* fname )
+XMLConfigFile::XMLConfigFile( const cstr fname ):
+	root_path("/")
 {
 	if( !doc.LoadFile(fname) )
 		throw std::runtime_error("unable to open XML file");
@@ -19,18 +20,18 @@ XMLConfigFile::XMLConfigFile( const char* fname )
 }
 
 
-XMLConfigFile::Nodeptr XMLConfigFile::find_node( xmlpath path ) const
+XMLConfigFile::Nodeptr
+XMLConfigFile::find_node( xmlpath path ) const
 {
 	Nodeptr nd;
-	if( !node_accessible(path,nd) ){
-		print_path(path);
-		throw std::runtime_error("XML path doesn't exist");
-	}
+	if( !node_accessible(path,nd) )
+		throw std::runtime_error("XML path >>>"+root_path+path_string(path)+"<<< doesn't exist");
 	return nd;
 }
 
 
-bool XMLConfigFile::node_accessible( xmlpath path, Nodeptr& result ) const
+bool
+XMLConfigFile::node_accessible( xmlpath path, Nodeptr& result ) const
 {
 	bool found = true;
 	result = rootnode;
@@ -60,9 +61,23 @@ XMLConfigFile::atoi_if_exist( xmlpath path, int default_val ) const
 }
 
 
-void XMLConfigFile::print_path( xmlpath path )
+std::string
+XMLConfigFile::path_string( xmlpath path )
 {
-	for(auto name : path)
-		printf("%s/",name);
-	printf("\n");
+	std::string str;
+	for(const auto& s:path){
+		str += "/";
+		str += s;
+	}
+	return str;
 }
+
+
+//void
+//XMLConfigFile::print_path( xmlpath path ) const
+//{
+//	printf(" >>> %s\n", (root_path+path_string(path)).c_str() );
+////	for(auto name : path)
+////		printf("%s/",name);
+////	printf("\n");
+//}

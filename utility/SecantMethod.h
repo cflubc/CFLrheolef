@@ -8,7 +8,7 @@
 #ifndef SECANTMETHOD_H_
 #define SECANTMETHOD_H_
 
-#include <cstdlib>
+#include <cstddef>
 #include <cassert>
 #include <cmath>
 
@@ -23,8 +23,10 @@
 template< typename T = double >
 class SecantMethod
 {
+	typedef std::size_t size_t;
+
 	T const target;
-	T const tolerance;
+	T tolerance;
 	T f1;
 	T x2;
 	T dx;
@@ -49,6 +51,11 @@ public:
 		converged = false;
 	}
 
+	void set_tolerance_and_Maxiteration( T const& tol, size_t const n ){
+		tolerance = tol;
+		max_iter = n;
+	}
+
 	size_t n_iterations_done() const
 	{return iter;}
 
@@ -57,6 +64,12 @@ public:
 
 	T get_input() const
 	{return x2;}
+
+	T get_last_input_change() const
+	{return dx;}
+
+	T difference_from_last_output( T const& f ) const
+	{return f-f1;}
 
 	T predict_new_input( T const& f2 );
 };
@@ -71,7 +84,7 @@ T SecantMethod<T>::predict_new_input( T const& f2 )
 	converged = fabs(dtarget)<tolerance;
 	if( !converged ){
 		++iter;
-		dx = dx/(f2-f1)*dtarget;
+		dx = dx/difference_from_last_output(f2)*dtarget;
 		// update to new x
 		x2 += dx;
 		f1 = f2;

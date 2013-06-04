@@ -16,6 +16,9 @@
 #include "StandardAugmentedLagrangian.h"
 #include "AugmentedLagrangianUnitFlow.h"
 
+#include "NormalStressBC_RHS.h"
+#include "BodyForce.h"
+
 #include "BubbleEncapsulationMesh.h"
 #include "ChannelMesh.h"
 
@@ -26,6 +29,11 @@ struct voidMesh
 	{}
 };
 
+struct VoidRHS
+{
+	VoidRHS( XMLConfigFile const&, rheolef::space const& ) {}
+	void add_to_rhs( rheolef::field& ) const {}
+};
 
 typedef IncompLinearDiffusionStokesSolver<BlockSystem_abtb> StokesFlow;
 
@@ -41,7 +49,7 @@ struct Problem_AugLag_ChannelUnitFlow
 
 struct Problem_AugLag_SteadyPoiseuille
 {
-	typedef StandardAugmentedLagrangian<StokesFlow,NormalStressBC_RHS> Application;
+	typedef StandardAugmentedLagrangian<StokesFlow,BodyForce> Application;
 	typedef channel_fullBC  BC;
 	typedef FlowFields FieldsPool;
 	typedef ChannelMesh Mesh;
@@ -60,8 +68,8 @@ struct Problem_AugLag_SteadyCavity
 
 struct Problem_AugLag_BubbleEncapsulation
 {
-	typedef StandardAugmentedLagrangian<StokesFlow,NormalStressBC_RHS> Application;
-	typedef channel_fullBC  BC;
+	typedef AugmentedLagrangianUnitFlow<StokesFlow,NormalStressBC_RHS> Application;
+	typedef bubble_BC  BC;
 	typedef FlowFields FieldsPool;
 	typedef BubbleEncapsulationMesh Mesh;
 	static constexpr cstr Name = "AugLag_BubbleEncapsulation";

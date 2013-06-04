@@ -8,23 +8,20 @@
 #ifndef OUTPUTFORMATTING_H_
 #define OUTPUTFORMATTING_H_
 
-#include <cmath>
-#include <string>
-#include <ostream>
 #include <stdexcept>
 #include <initializer_list>
 
 /**
  * print a table with given column widths easily.
  */
-template< int Ncolumns >
+template< int Ncolumns, typename Stream >
 class ColumnOutputFormatter
 {
+public:
 	typedef const std::initializer_list<int>  width_list;
 
-public:
-	ColumnOutputFormatter( std::ostream& ostream, width_list columns_width );
-	void fill_horizontal( char c, double extend_coef=1. );
+	ColumnOutputFormatter( Stream& ostream, width_list columns_width );
+	void fill_horizontal( char c );
 
 	template< typename... Args >
 	void print( const Args... args ){
@@ -34,7 +31,8 @@ public:
 
 
 private:
-	std::ostream& out;
+
+	Stream& out;
 	int width[Ncolumns];
 	int total_width;
 
@@ -51,9 +49,9 @@ private:
 
 
 
-template< int Ncolumns >
-ColumnOutputFormatter<Ncolumns>::ColumnOutputFormatter(
-			std::ostream& ostream,
+template< int Ncolumns, typename Stream  >
+ColumnOutputFormatter<Ncolumns,Stream>::ColumnOutputFormatter(
+			Stream& ostream,
 			width_list columns_width ):
 	out(ostream)
 {
@@ -67,22 +65,22 @@ ColumnOutputFormatter<Ncolumns>::ColumnOutputFormatter(
 }
 
 
-template< int Ncolumns >
-void ColumnOutputFormatter<Ncolumns>::fill_horizontal( char c, double extend_coef )
+template< int Ncolumns, typename Stream  >
+void ColumnOutputFormatter<Ncolumns,Stream>::fill_horizontal( char c )
 {
 	const char old_fill = out.fill();
 	out.fill(c);
-	out.width( std::ceil(extend_coef*total_width) );
+	out.width(total_width);
 	out << '\n';
 	out.fill(old_fill);
 }
 
 
-template< typename... WidthList >
-inline ColumnOutputFormatter<sizeof...(WidthList)>
-make_column_output( std::ostream& out, WidthList... list )
+template< typename Stream, typename... WidthList >
+inline ColumnOutputFormatter<sizeof...(WidthList),Stream>
+make_column_output( Stream& out, WidthList... list )
 {
-	return ColumnOutputFormatter<sizeof...(WidthList)>(out,{list...});
+	return ColumnOutputFormatter<sizeof...(WidthList),Stream>(out,{list...});
 }
 
 

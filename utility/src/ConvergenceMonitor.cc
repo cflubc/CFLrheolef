@@ -8,44 +8,66 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
-#include <cassert>
 #include <fstream>
+#include <stdexcept>
 
 #include "ConvergenceMonitor.h"
 
 
 ConvergenceMonitor::ConvergenceMonitor(
-		 	 	 	const string& name,
-					const double& error_limit,
+		 	 	 	string const& name,
 					std::initializer_list<cstr> names ):
+//					,double const& error_limit ):
 	file_name_base(name),
-	absolute_error(error_limit),
+//	absolute_error(error_limit),
 	param_names( begin(names), end(names) ),
 	converge_histories( names.size() )
 {}
 
 
 void
-ConvergenceMonitor::add_point( const size_t& iter, std::initializer_list<double> vals )
+ConvergenceMonitor::add_point( const size_t iter, std::initializer_list<double> vals )
 {
-	assert( vals.size()==converge_histories.size() );
+	if( vals.size()!=converge_histories.size() )
+		throw std::logic_error("The number of provided points is different from class initialization");
 
-	iteration.emplace_back(iter);
+	iteration.push_back(iter);
 	auto val( begin(vals) );
 	for(auto& h : converge_histories){
-		h.emplace_back(*val);
+		h.push_back(*val);
 		++val;
 	}
 }
 
 
 bool
-ConvergenceMonitor::is_converged() const
+ConvergenceMonitor::is_converged( double const& err ) const
 {
 	bool ans(true);
 	for(const auto& h : converge_histories)
-		ans = ans && (h.back()<=absolute_error);
+		ans = ans && (h.back()<=err);
 	return ans;
+}
+
+
+void
+ConvergenceMonitor::rename_and_init( string const& name,
+					     			 std::initializer_list<cstr> names )
+//					     			 ,double const& error_limit )
+{
+	file_name_base = name;
+	param_names.assign( begin(names), end(names) );
+//	absolute_error = error_limit;
+	clear();
+}
+
+
+void
+ConvergenceMonitor::clear()
+{
+	iteration.clear();
+	converge_histories.clear();
+	converge_histories.resize( n_parameters() );
 }
 
 

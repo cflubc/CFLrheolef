@@ -23,7 +23,7 @@ class NormalStressBC_RHS
 public:
 	NormalStressBC_RHS( XMLConfigFile const& conf, rheolef::space const& Uspace ):
 		v(Uspace),
-		val( conf.atof_if_exist("normal_stress_value",0.) ),
+		XML_INIT_VAR_IF_EXIST(conf,val,0.,"normal_stress_value"),
 		normalized_rhs( -integrate(conf("edge_name"), dot(v,rheolef::normal())) )
 	{}
 

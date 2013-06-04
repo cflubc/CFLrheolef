@@ -16,7 +16,9 @@
 
 #include <cmath>
 #include <cstdio>
+#include <string>
 #include <iostream>
+
 #include "rheolef.h"
 #include "rheolef/diststream.h"
 
@@ -49,14 +51,15 @@ public:
 		velocity_minimizer(conf,fields,BC,a),
 		Xh(fields.get_geo(), derivative_approx(fields.Uh().get_approx()), "tensor"),
 		Tau(Xh, 0.),
-		Gam(Xh, 0.),
+		Gam(Xh, -1000.),
 		Gamdot(Xh, 0.),
 		TminusaG(Xh, 0.),
 		vel_rhs(fields.Uspace(), 0.),
 		vel_rhs_const(vel_rhs.get_space(), 0.),
 		Gamdot_server(fields.Uh()),
 		div_ThUh( -.5*trans(Gamdot_server.set_desired_strainrate_space(Xh)) ),
-		deltaTau(Tau)
+		deltaTau(Tau),
+		deltaU(fields.Uh())
 	{}
 
 
@@ -65,17 +68,26 @@ public:
 		update_lagrangeMultipliers(x);
 	}
 
-	Float update_lagrangeMultipliers_report_stress_change(){
-		save_stress();
-		update_lagrangeMultipliers_fast();
-		return report_stress_change();
+	void update_lagrangeMultipliers_clac_strain_rate_multiplier(){
+		StrainRate_lagMultiplier_calc x(Gam,a);
+		update_lagrangeMultipliers(x);
 	}
 
-	void save_stress()
-	{deltaTau.save_field();}
+	Float iterate_report_stress_change(){
+		deltaTau.save_field();
+		iterate();
+		return deltaTau.calculate_field_change();
+	}
 
-	Float report_stress_change()
-	{return deltaTau.calculate_field_change();}
+	void save_stress_velocity(){
+		deltaTau.save_field();
+		deltaU.save_field();
+	}
+
+	void report_stress_velocity_change( Float& dT, Float& dU ){
+		dT = deltaTau.calculate_field_change();
+		dU = deltaU.calculate_field_change();
+	}
 
 	field const augmented_lagraniang_rhs() const
 	{return div_ThUh*TminusaG;}
@@ -98,38 +110,43 @@ public:
 		write_field(Gam,"Gam",o);
 	}
 
+	std::string geo_name() const
+	{return Xh.get_geo().name();}
+
 	void set_rhs_const_part_to_discrete_dirichlet_rhs(){
-//		vel_rhs_const = 0.;
 		velocity_minimizer.set_discrete_dirichlet_rhs(vel_rhs_const);
+	}
+
+	void reset_lagrangeMultipliers(){
+		Tau = 0.;
+		TminusaG = 0.;
 	}
 
 	void iterate_ntimes( const int niter ){
 		for( int i=0; i<niter; ++i ){
 			update_lagrangeMultipliers_fast();
 			build_complete_rhs_and_solve_vel_minimization( augmented_lagraniang_rhs() );
-//			vel_rhs = vel_rhs_const + augmented_lagraniang_rhs();
-//			solve_vel_minization();
 		}
+	}
+
+	void iterate_ntimes_report_stress_velocity_change( const int niter, Float& dT, Float& dU ){
+		iterate_ntimes(niter);
+		iterate_report_stress_velocity_change(dT,dU);
+	}
+
+	void iterate_report_stress_velocity_change( Float& dT, Float& dU ){
+		save_stress_velocity();
+		iterate();
+		report_stress_velocity_change(dT,dU);
 	}
 
 	void iterate()
 	{iterate_ntimes(1);}
 
-	Float iterate_report_stress_change(){
-		Float const Tres = update_lagrangeMultipliers_report_stress_change();
-		build_complete_rhs_and_solve_vel_minimization( augmented_lagraniang_rhs() );
-//		vel_rhs = vel_rhs_const + augmented_lagraniang_rhs();
-//		solve_vel_minization();
-		return Tres;
-	}
-
 	void build_complete_rhs_and_solve_vel_minimization( const field& f ){
 		vel_rhs = vel_rhs_const + f;
 		solve_vel_minization();
 	}
-
-//	void build_the_complete_rhs()
-//	{vel_rhs += vel_rhs_const;}
 
 	void solve_vel_minization()
 	{velocity_minimizer.solve(vel_rhs);}
@@ -156,14 +173,26 @@ private:
 	StrainRateCalculator Gamdot_server;
 	rheolef::form div_ThUh;
 	L2norm_calculator deltaTau;
+	L2norm_calculator deltaU;
 
 	template< typename LoopManipulator >
 	void update_lagrangeMultipliers( LoopManipulator& obj );
 
 	struct manip_void {
 		void operator++() const {}
-		void set_stress_residual_fraction( Float ) const {}
 		void do_extra_stuff( int, Float, Float ) const {}
+	};
+
+	struct StrainRate_lagMultiplier_calc {
+		StrainRate_lagMultiplier_calc( field& Gamma, Float const& _a ):
+			G(Gamma),
+			beta(1./(1.+_a))
+		{}
+		void operator++() {++G;}
+		void do_extra_stuff( int const i, Float const& TaG, Float const& resi_stress_frac )
+		{G(i) = TaG*resi_stress_frac*beta;}
+		Tensor_itr G;
+		Float const beta;
 	};
 };
 
@@ -175,12 +204,12 @@ void AugmentedLagrangian_basic<VelocityMinimizationSolver>::
 update_lagrangeMultipliers( LoopManipulator& obj )
 {
 	assert_equal(Gamdot,Tau);
-	//Tensor_itr G(Gam); //for last iteration when want to save...
 	const Float& alpha_ = alpha;
 	const Float& Bn_ = Bn;
 	const Float& a_ = a;
 
 	Gamdot_server.get(Gamdot);
+
 	Tensor_citr Gdot(Gamdot);
 	for( Tensor_itr T(Tau), TmG(TminusaG); !T.end_reached(); ++T, ++TmG, ++Gdot, ++obj )
 	{
@@ -196,14 +225,12 @@ update_lagrangeMultipliers( LoopManipulator& obj )
 		if( 0.<resi )
 		{
 			const Float resi_frac( resi/TaGdot_norm );
-			obj.set_stress_residual_fraction(resi_frac);
 			const Float coef = alpha_*resi_frac;
 			// update of Lagrange multipliers
 			for(int i=0; i<Tensor_itr::Ncomp; ++i){
 				T(i)   = TaGdot[i]*(1.-coef);
 				TmG(i) = TaGdot[i]*(1.-coef-coef);
-				obj.do_extra_stuff( i, TaGdot[i], T(i) );
-	//				G(i)   = TaGdot[i]*coef;
+				obj.do_extra_stuff(i,TaGdot[i],resi_frac);
 			}
 		}
 		else
@@ -212,13 +239,10 @@ update_lagrangeMultipliers( LoopManipulator& obj )
 			for(int i=0; i<Tensor_itr::Ncomp; ++i){
 				T(i)   = TaGdot[i];
 				TmG(i) = TaGdot[i];
-				obj.do_extra_stuff( i, TaGdot[i], T(i) );
-	//				G(i)   = 0.;
+				obj.do_extra_stuff(i,TaGdot[i],0.);
 			}
 		}
-
 	}
-//	rhs = div_ThUh*TminusaG;
 }
 
 
