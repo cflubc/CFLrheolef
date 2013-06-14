@@ -9,7 +9,7 @@
 #define BUBBLEENCAPSULATIONMESH_H_
 
 
-#include <cstdlib>
+#include <cstddef>
 #include <cmath>
 #include <vector>
 #include <fstream>
@@ -25,16 +25,19 @@
 
 class BubbleEncapsulationMesh
 {
+	typedef std::size_t size_t;
 	typedef std::string string;
 
 public:
+
 	BubbleEncapsulationMesh( XMLConfigFile const& conf, string const& base_name ):
-		rx( .5*conf.atof("bubble_length") ),
-		ry( .5*conf.atof("bubble_width") ),
-		 D( .5*conf.atof("channel_width") ),
-		 L( .5*conf.atof("channel_length") ),
+		rx( .5*XML_VAL(conf,rx,"bubble_length") ),
+		ry( .5*XML_VAL(conf,ry,"bubble_width") ),
+		 D( .5*XML_VAL(conf,D,"channel_width") ),
+		 L( .5*XML_VAL(conf,L,"channel_length") ),
 		shape(rx,ry),
-		paramesh( conf.atof("bubble_curve_dteta_limit") )
+		paramesh( conf({"ParametricCurve_mesh","max_dTheta"},rx),
+				  conf({"ParametricCurve_mesh","max_ds"},rx) )
 	{
 		string const type( conf("type") );
 		if( type=="symx" )
@@ -47,7 +50,7 @@ public:
 
 	void symxy( string const& base_name )
 	{
-		paramesh.gen_mesh(shape,1.5*PI,2.*PI,&X,&Y);
+//		paramesh.gen_mesh(shape,1.5*PI,2.*PI,&X,&Y);
 
 		size_t const nbubble = X.size();
 		size_t const ntrivial_vertices = 5;
@@ -84,7 +87,21 @@ public:
 
 	void symx( string const& base_name )
 	{
-		paramesh.gen_mesh(shape,PI,2.*PI,&X,&Y);
+//		paramesh.gen_mesh(shape,PI,2.*PI,&X,&Y);
+		double const tbeg = PI;
+		double const tend = 2.*PI;
+		size_t const Np = 30;
+		double const dt = (tend-tbeg)/(Np+1);
+		std::vector<double> points(Np);
+		X.resize(Np);
+		Y.resize(Np);
+		double t = tbeg;
+		for(size_t i=0; i<Np; ++i){
+			t += dt;
+			X[i] = shape.x(t);
+			Y[i] = shape.y(t);
+		}
+
 
 		size_t const nbubble = X.size();
 		size_t const ntrivial_vertices = 6;
@@ -124,13 +141,14 @@ public:
 	}
 
 private:
+
 	double const rx;
 	double const ry;
 	double const  D;
 	double const  L;
 
 	shape_ellipse shape;
-	ParametricCurveMeshGen<double,ParametricMeshOpts::exclude_ends> paramesh;
+	ParametricCurveMeshGen<double,false,false,true> paramesh;
 	std::vector<double> X;
 	std::vector<double> Y;
 

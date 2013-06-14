@@ -38,7 +38,7 @@ public:
 			throw std::logic_error("Wrong type for ChannelMesh provided");
 
 		std::ofstream fdmn( domain_filename(base_name) );
-		fdmn << "EdgeDomainNames\n"
+		fdmn <<  "EdgeDomainNames\n"
 		         "4\n"
 		         "bottom\n"
 		         "right\n"
@@ -49,8 +49,8 @@ public:
 
 private:
 
-	double whalf;
-	double lhalf;
+	double const whalf;
+	double const lhalf;
 
 	static void gen_rectangle( double const& x_bl, double const& y_bl,
 						double const& x_tr, double const& y_tr, bamgcad& bamg )

@@ -5,16 +5,17 @@
     <FEfields>
         <pspace>P1</pspace>
         <vspace>P2</vspace>
+        <BCtype>full</BCtype>
     </FEfields>    
 
     <AugmentedLagrangian>
         <Bn>4.8</Bn>
-        <a>10</a>             
+        <a>10</a>
     </AugmentedLagrangian>
 
    <convergence_limit>5E-6</convergence_limit>
    <max_iteration>2000</max_iteration>
-   <reports_frequency>10</reports_frequency>
+   <reports_frequency>50</reports_frequency>
    <report_header_reprint_frequency>30</report_header_reprint_frequency>
 
    <source_term>
@@ -23,21 +24,24 @@
        <bodyforce_vector>9.6 0 0</bodyforce_vector>
    </source_term>
 
-   <mesh>
+   <Mesh>
       <name>channel</name>
       <type>full</type>
       <width>2</width>
       <length>.5</length>
       <command_line_args>-hmax .1</command_line_args>
       <plot_mesh_args>no</plot_mesh_args>
-   </mesh>
+   </Mesh>
 
     <Adaptation>
-        <cycles>0</cycles>
-        <hmin>.01 .005 .002</hmin>
-        <hmax>.07</hmax>
-        <hcoef>6</hcoef>
-        <err>3E-3</err>
-        <n_vertices_max>20000</n_vertices_max>
+        <cycles>3</cycles>
+        <hmin>.005</hmin>
+        <hmax>.1</hmax>
+        <hcoef>1</hcoef>
+        <ratio>1</ratio>
+        <err>1e-3</err>
+        <errg>1e-3</errg>
+        <additional>-AbsError</additional>
+        <n_vertices_max>50000</n_vertices_max>
     </Adaptation>    
 </data>

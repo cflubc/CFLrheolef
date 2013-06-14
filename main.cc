@@ -6,7 +6,6 @@
  */
 
 #include <cstdlib>
-#include <cstring>
 #include <stdexcept>
 
 #include "rheolef.h"
@@ -26,7 +25,7 @@
  * of restart, reads the proper geometry and pass to adapt loop
  */
 
-typedef Problem_AugLag_BubbleEncapsulation  Problem;
+typedef Problem_WavyChannelFouling  Problem;
 typedef Problem::BC  DirichletBoundaryConditions;
 typedef Problem::FieldsPool  FieldsPool;
 typedef Problem::Mesh  Mesh;
@@ -34,25 +33,39 @@ typedef Problem::Mesh  Mesh;
 typedef AdaptationLoop<Problem::Application,Problem::FieldsPool,Problem::BC>  Application;
 
 
-
+/**/
 int main(int argc, char** argv )
 {
 	rheolef::environment env(argc,argv);
 
+	bool generate_mesh = true;
+	bool exit_after_mesh_gen = false;
+	for(int i=1; i<argc; ++i)
+	{
+		cstr arg = argv[i];
+		if( cstrcmp(arg,"-no-mesh") )
+			generate_mesh = false;
+		else if( cstrcmp(arg,"-exit") )
+			exit_after_mesh_gen = true;
+	}
+
 	XMLConfigFile const conf( argv[1] );
-	if( strcmp(Problem::Name,conf("problem"))!=0 )
+	if( !cstrcmp(Problem::Name,conf("problem")) )
 		throw std::logic_error("Name of the problem in xml file doesn't match with source code");
 
 	TimeGauge timer;
 	timer.start();
 
-	XMLConfigFile const meshxml = conf.child("mesh");
+	XMLConfigFile const meshxml = conf.child("Mesh");
 	std::string const base_name = meshxml("name");
 	std::string const geo_file = geo_filename(base_name);
-	Mesh create_meshcad( meshxml, base_name );
-	make_geo_from_bamgcad_and_dmn_file( base_name,meshxml("command_line_args") );
+	if( generate_mesh )
+	{
+		Mesh create_meshcad( meshxml, base_name );
+		make_geo_from_bamgcad_and_dmn_file( base_name,meshxml("command_line_args") );
+	}
 	plot_mesh(meshxml, geo_file);
-	if(argc==3)
+	if( exit_after_mesh_gen )
 		exit(0);
 
 	rheolef::geo omega(geo_file);
@@ -73,7 +86,7 @@ int main(int argc, char** argv )
 
 	return EXIT_SUCCESS;
 }
-
+/**/
 
 template< typename Application >
 struct NonAdaptiveApplication
@@ -84,3 +97,18 @@ struct NonAdaptiveApplication
 		app.run();
 	}
 };
+
+//int main( ){
+//	rheolef::idiststream o("wav-1-crit","field");
+//	rheolef::field w1, w;
+//	o >> w1;
+//	o.close();
+//
+//	o.open("wav-crit","field");
+//	o >> w;
+//	o.close();
+//
+//	rheolef::field wi = interpolate(w.get_space(),w1);
+//	rheolef::form m(w.get_space(),w.get_space(),"mass");
+//	std::cout << "this is the norm " << m(wi-w,wi-w) << '\n';
+//}

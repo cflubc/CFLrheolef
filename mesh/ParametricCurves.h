@@ -10,6 +10,7 @@
 #define PARAMETRICCURVES_H_
 
 #include <cmath>
+#include "CFL.h"
 
 
 
@@ -25,7 +26,6 @@ struct shape_ellipse
 	double const xc;
 	double const yc;
 
-public:
 	shape_ellipse( double const& _a, double const& _b,
 				   double const& _x, double const& _y ):
 	   rx(_a),
@@ -48,6 +48,32 @@ public:
 	SHAPE_FUNC( ddy,-ry*std::cos(t) )
 };
 
+
+struct wavy_wall
+{
+	double const amplitude;
+	double const half_of_wavelength;
+
+	wavy_wall( double const& a, double const& wave_length ):
+		amplitude(a),
+		half_of_wavelength(.5*wave_length)
+	{}
+
+	double scale() const
+	{return PI/half_of_wavelength;}
+
+	double scaled_t( double const& t ) const
+	{return scale()*t;}
+
+	SHAPE_FUNC( x, t )
+	SHAPE_FUNC( y, 1.+amplitude*(1.+std::cos(scaled_t(t))) )
+
+	SHAPE_FUNC( dx, 1. )
+	SHAPE_FUNC( dy, -amplitude*scale()*std::sin(scaled_t(t)) )
+
+	SHAPE_FUNC( ddx, 0. )
+	SHAPE_FUNC( ddy, -amplitude*scale()*scale()*std::cos(scaled_t(t)) )
+};
 
 #undef SHAPE_FUNC
 #endif /* PARAMETRICCURVES_H_ */

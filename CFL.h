@@ -8,6 +8,7 @@
 #ifndef CFL_H_
 #define CFL_H_
 
+#include <cstring>
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -23,7 +24,12 @@ typedef const char* cstr;
 
 constexpr cstr CFL_FieldsPool_Module = "FEfields";
 constexpr cstr CFL_SaveFolder_BaseName = "result";
-constexpr static double PI = std::acos(-1);
+constexpr double PI = std::acos(-1);
+
+
+inline bool
+cstrcmp( cstr const s1, cstr const s2 )
+{return strcmp(s1,s2)==0;}
 
 inline std::string
 domain_filename( std::string const& base )

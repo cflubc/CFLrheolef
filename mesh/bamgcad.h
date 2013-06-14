@@ -41,6 +41,7 @@ public:
 	{
 		println_args(file,
 				"MeshVersionFormatted 0\n"
+				"AngleOfCornerBound 0\n"
 				"Dimension 2\n\n"
 				"Vertices ", nvertices);
 	}

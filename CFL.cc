@@ -57,6 +57,6 @@ void plot_mesh( XMLConfigFile const& conf, std::string const& geofile )
 	cstr const args = conf.return_txt_if_exist({"plot_mesh_args"},no_disp);
 	if( strcmp(no_disp,args)==0 )
 		return;
-	OS::run_command( "geo "+geofile+" "+args );
+	OS::run_command( "geo -noverbose "+geofile+" "+args );
 }
 

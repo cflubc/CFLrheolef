@@ -30,18 +30,30 @@ template< typename T,
 class ParametricCurveMeshGen
 {
 	T const delta_teta_limit;
+	T const points_distance_limit;
 
 	template< typename Curve >
-	T calc_curve_parameter_increment( Curve const& crv, T const& t ) const {
+	T calc_curve_parameter_increment( Curve const& crv, T const& t, T *const dx2plusdy2 ) const
+	{
 		T const dx = crv.dx(t);
 		T const dy = crv.dy(t);
-		T const dt = (dx*dx+dy*dy)/fabs(crv.ddy(t)*dx-crv.ddx(t)*dy)*delta_teta_limit;
+		*dx2plusdy2 = sqr(dx)+sqr(dy);
+		T const dt = *dx2plusdy2/fabs(crv.ddy(t)*dx-crv.ddx(t)*dy)*delta_teta_limit;
 		return dt;
 	}
 
+	template< typename Curve >
+	T distance_of_points( Curve const& crv, T const& t1, T const& t2 ) const {
+		return sqrt( sqr( crv.x(t2)-crv.x(t1) ) + sqr( crv.y(t2)-crv.y(t1) ) );
+	}
+
+	T sqr( T const& t ) const
+	{return t*t;};
+
 public:
-	ParametricCurveMeshGen( T const& limit = .25 ):
-		delta_teta_limit(limit)
+	ParametricCurveMeshGen( T const& dt, T const& ds ):
+		delta_teta_limit(dt),
+		points_distance_limit(ds)
 	{}
 
 	template< typename Curve >
@@ -68,6 +80,9 @@ ParametricCurveMeshGen<T,include_begin_point,include_end_point,second_order>
 			std::vector<T> *const X,
 			std::vector<T> *const Y ) const {
 
+	if( end<begin )
+		throw std::logic_error("begin of range should be less than the end of it for parametric mesh generation");
+
 	std::vector<T> points;
 	T t = begin;
 	if(include_begin_point)
@@ -75,13 +90,25 @@ ParametricCurveMeshGen<T,include_begin_point,include_end_point,second_order>
 
 	while( t<end )
 	{
-		T const dt_predict = calc_curve_parameter_increment(crv,t);
+		T const t_old = t;
+		T dx2plusdy;
+		T const first_order_dt = calc_curve_parameter_increment(crv,t_old,&dx2plusdy);
+
+		T dt;
 		if( second_order ){
-			T const dt_correct = calc_curve_parameter_increment(crv,t+dt_predict);
-			t += .5*(dt_predict+dt_correct);
+			T dx2plusdy2_correct;
+			T const dt_correct = calc_curve_parameter_increment(crv,t_old + first_order_dt,&dx2plusdy2_correct);
+			dt = .5*(first_order_dt+dt_correct);
 		}
 		else
-			t += dt_predict;
+			dt = first_order_dt;
+
+		if( points_distance_limit<distance_of_points(crv,t_old,t_old+dt) )
+			// this shows that curve here is almost straight line, use this to find
+			// proper dt which approximately gives distance of points as max_distance
+			dt = points_distance_limit/sqrt(dx2plusdy);
+
+		t += dt;
 		points.push_back(t);
 	}
 	// in last iteration a point with end<=t might be inserted

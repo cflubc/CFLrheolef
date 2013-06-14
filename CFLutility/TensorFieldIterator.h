@@ -8,13 +8,12 @@
 #ifndef TENSORFIELDITERATOR_H_
 #define TENSORFIELDITERATOR_H_
 
-#include "rheolef.h"
+#include "rheolef/compiler.h"
 
 
 template< typename Iterator >
 class TensorFieldIterator
 {
-	typedef rheolef::field field;
 	typedef rheolef::Float Float;
 
 public:
@@ -24,7 +23,8 @@ public:
 	/// for norm of symmetric tensor: @f$ T^2_{xx} + 2T^2_{xy} + T^2_{yy} @f$
 	constexpr static tensor coef_for_norm_calc{1., 2., 1.};
 
-	TensorFieldIterator( field& f ):
+	template< typename Field >
+	TensorFieldIterator( Field& f ):
 		it{ f[0].begin_dof(),
 		    f[1].begin_dof(),
 		    f[2].begin_dof() },
@@ -37,8 +37,6 @@ public:
 	{ return *(it[i]); }
 
 	void operator++(){
-//		for(int i=0; i<Ncomp; ++i)
-//			++(it[i]);
 		++(it[0]);
 		++(it[1]);
 		++(it[2]);
@@ -53,52 +51,10 @@ private:
 	Iterator end0;
 };
 
+
 template< typename Iterator >
 constexpr typename TensorFieldIterator<Iterator>::tensor
 TensorFieldIterator<Iterator>::coef_for_norm_calc;
 
+
 #endif /* TENSORFIELDITERATOR_H_ */
-
-
-
-//template< typename Iterator >
-//class TensorFieldIterator
-//{
-//	typedef rheolef::field field;
-//
-//public:
-//	enum { Ncomp=4 };
-//	typedef rheolef::Float tensor[Ncomp];
-//
-//	TensorFieldIterator( field& f ):
-//		it{ f(0,0).begin_dof(),
-//		    f(1,0).begin_dof(),
-//		    f(0,1).begin_dof(),
-//		    f(1,1).begin_dof() },
-//		end00(f(0,0).end_dof())
-//	{}
-//
-//	TensorFieldIterator() {}
-//
-//	typename Iterator::reference operator() ( int i ) const
-//	{ return *(it[i]); }
-//
-//	void operator++(){
-//		for(int i=0; i<Ncomp; ++i)
-//			++(it[i]);
-//	}
-//
-//	bool end_reached()
-//	{ return it[0]==end00; }
-//
-//	void reinit( field& f ){
-//		it[0] = f(0,0).begin_dof();
-//		it[1] = f(1,0).begin_dof();
-//		it[2] = f(0,1).begin_dof();
-//		it[3] = f(1,1).begin_dof();
-//	}
-//
-//private:
-//	Iterator it[Ncomp];
-//	Iterator end00;
-//};

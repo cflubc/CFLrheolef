@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <cstdio>
+#include <cassert>
 #include <string>
 #include <iostream>
 
@@ -45,8 +46,8 @@ public:
 	AugmentedLagrangian_basic( const XMLConfigFile& conf,
 							   FieldsPool& fields,
 							   DirichletBC& BC ):
-		Bn( conf.atof("Bn") ),
-		a( conf.atof("a") ),
+		XML_INIT_VAR(conf,Bn,"Bn"),
+		XML_INIT_VAR(conf,a,"a"),
 		alpha( a/(1.+a) ),
 		velocity_minimizer(conf,fields,BC,a),
 		Xh(fields.get_geo(), derivative_approx(fields.Uh().get_approx()), "tensor"),
@@ -73,19 +74,19 @@ public:
 		update_lagrangeMultipliers(x);
 	}
 
-	Float iterate_report_stress_change(){
+	Float iterate_report_strain_change(){
 		deltaTau.save_field();
 		iterate();
-		return deltaTau.calculate_field_change();
+		return deltaTau.calculate_field_change()/a;
 	}
 
-	void save_stress_velocity(){
+	void save_strain_velocity(){
 		deltaTau.save_field();
 		deltaU.save_field();
 	}
 
-	void report_stress_velocity_change( Float& dT, Float& dU ){
-		dT = deltaTau.calculate_field_change();
+	void report_strain_velocity_change( Float& dGam, Float& dU ){
+		dGam = deltaTau.calculate_field_change()/a;
 		dU = deltaU.calculate_field_change();
 	}
 
@@ -102,12 +103,18 @@ public:
 		rheolef::odiststream o(Xh.get_geo().name(),"field");
 		write_fields(o);
 		o.close();
+
+//		o.open("U2StrainRate","m",false);
+//		o << rheolef::matlab;
+//		Gamdot_server.U2StrainRate.put(o);
+//		o.close();
 	}
 
 	void write_fields( rheolef::odiststream& o ) const {
 		velocity_minimizer.write_results(o);
 		write_field(Tau,"T",o);
 		write_field(Gam,"Gam",o);
+		write_field(Gamdot,"Gammadot",o);
 	}
 
 	std::string geo_name() const
@@ -129,21 +136,21 @@ public:
 		}
 	}
 
-	void iterate_ntimes_report_stress_velocity_change( const int niter, Float& dT, Float& dU ){
+	void iterate_ntimes_report_strain_velocity_change( const int niter, Float& dGam, Float& dU ){
 		iterate_ntimes(niter);
-		iterate_report_stress_velocity_change(dT,dU);
+		iterate_report_strain_velocity_change(dGam,dU);
 	}
 
-	void iterate_report_stress_velocity_change( Float& dT, Float& dU ){
-		save_stress_velocity();
+	void iterate_report_strain_velocity_change( Float& dT, Float& dU ){
+		save_strain_velocity();
 		iterate();
-		report_stress_velocity_change(dT,dU);
+		report_strain_velocity_change(dT,dU);
 	}
 
 	void iterate()
 	{iterate_ntimes(1);}
 
-	void build_complete_rhs_and_solve_vel_minimization( const field& f ){
+	void build_complete_rhs_and_solve_vel_minimization( field const& f ){
 		vel_rhs = vel_rhs_const + f;
 		solve_vel_minization();
 	}
@@ -158,9 +165,9 @@ public:
 	{return vel_rhs;}
 
 private:
-	Float Bn;      ///< Bingham number
-	Float a;       ///< Augmentation parameter
-	Float alpha;   ///< helper const coeficient
+	Float const Bn;      ///< Bingham number
+	Float const a;       ///< Augmentation parameter
+	Float const alpha;   ///< helper const coeficient
 
 	VelocityMinimizationSolver velocity_minimizer;
 	space Xh;    ///< tensor space of Lagrange multipliers
@@ -203,11 +210,6 @@ template< typename LoopManipulator >
 void AugmentedLagrangian_basic<VelocityMinimizationSolver>::
 update_lagrangeMultipliers( LoopManipulator& obj )
 {
-	assert_equal(Gamdot,Tau);
-	const Float& alpha_ = alpha;
-	const Float& Bn_ = Bn;
-	const Float& a_ = a;
-
 	Gamdot_server.get(Gamdot);
 
 	Tensor_citr Gdot(Gamdot);
@@ -216,20 +218,20 @@ update_lagrangeMultipliers( LoopManipulator& obj )
 		Tensor TaGdot;
 		Float TaGdot_norm(0.);
 		for( int i=0; i<Tensor_itr::Ncomp; ++i ){
-			TaGdot[i] = T(i)+a_*Gdot(i);
+			TaGdot[i] = T(i)+a*Gdot(i);
 			TaGdot_norm += Tensor_itr::coef_for_norm_calc[i]*rheolef::sqr(TaGdot[i]);
 		}
 		TaGdot_norm = std::sqrt( .5*TaGdot_norm );
 
-		const Float resi = TaGdot_norm-Bn_;
+		const Float resi = TaGdot_norm-Bn;
 		if( 0.<resi )
 		{
 			const Float resi_frac( resi/TaGdot_norm );
-			const Float coef = alpha_*resi_frac;
+			const Float coef = alpha*resi_frac;
 			// update of Lagrange multipliers
 			for(int i=0; i<Tensor_itr::Ncomp; ++i){
 				T(i)   = TaGdot[i]*(1.-coef);
-				TmG(i) = TaGdot[i]*(1.-coef-coef);
+				TmG(i) = TaGdot[i]*(1.-2.*coef);
 				obj.do_extra_stuff(i,TaGdot[i],resi_frac);
 			}
 		}
@@ -243,6 +245,8 @@ update_lagrangeMultipliers( LoopManipulator& obj )
 			}
 		}
 	}
+	assert( TmG.end_reached() );
+	assert( Gdot.end_reached() );
 }
 
 

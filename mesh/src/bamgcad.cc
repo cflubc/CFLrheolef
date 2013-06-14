@@ -20,7 +20,7 @@ void make_geo_from_bamgcad_and_dmn_file(
 	std::string const bamgfile = bamgmesh_filename(base_name);
 	std::ostringstream os;
 	print_args(os,
-		"bamg -g ",bamgcad_filename(base_name)," -o ",bamgfile," ",other_commandline_args);
+		"bamg -g ",bamgcad_filename(base_name)," -o ",bamgfile," -splitpbedge ",other_commandline_args);
 	println_args( std::cout,"[Exec] ",os.str() );
 	system( os.str().c_str() );
 

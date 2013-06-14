@@ -8,7 +8,7 @@
 #ifndef ADAPTATIONSTRATEGY_H_
 #define ADAPTATIONSTRATEGY_H_
 
-#include <cstdlib>
+#include <cstddef>
 #include <vector>
 #include <string>
 
@@ -16,7 +16,10 @@
 
 class FixedStrategy
 {
+	typedef std::size_t size_t;
+
 public:
+
 	int const n_adapt;
 
 	FixedStrategy( XMLConfigFile const& conf ):
@@ -25,8 +28,12 @@ public:
 		hmax(conf,"hmax"),
 		hcoef(conf,"hcoef"),
 		err(conf,"err"),
-		n_vertices_max(conf,"n_vertices_max")
-	{}
+		n_vertices_max(conf,"n_vertices_max"),
+		ratio(conf,"ratio")
+//		errg(conf,"errg")
+	{
+		opts.additional = conf("additional");
+	}
 
 	template< typename Application >
 	void run_app( Application& app )
@@ -41,20 +48,26 @@ public:
 		SET_OPT(hcoef)
 		SET_OPT(err)
 		SET_OPT(n_vertices_max)
+		SET_OPT(ratio)
+//		SET_OPT(errg)
 	#undef SET_OPT
 		return opts;
 	}
 
+
 private:
+
 	struct adaptive_parameter {
 		typedef std::vector<rheolef::Float> vec;
 		vec const p;
+
+		adaptive_parameter() {}
 
 		adaptive_parameter( XMLConfigFile const& conf, cstr const name ):
 			p( conf(name,vec()) )
 		{}
 
-		rheolef::Float operator[]( size_t icycle ) const {
+		rheolef::Float operator[]( size_t const icycle ) const {
 			if( icycle<p.size() )
 				return p[icycle];
 			return p.back();
@@ -63,11 +76,13 @@ private:
 
 
 	rheolef::adapt_option_type opts;
-	adaptive_parameter hmin;
-	adaptive_parameter hmax;
-	adaptive_parameter hcoef;
-	adaptive_parameter err;
-	adaptive_parameter n_vertices_max;
+	adaptive_parameter const hmin;
+	adaptive_parameter const hmax;
+	adaptive_parameter const hcoef;
+	adaptive_parameter const err;
+	adaptive_parameter const n_vertices_max;
+	adaptive_parameter const ratio;
+//	adaptive_parameter const errg;
 };
 
 

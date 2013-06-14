@@ -59,13 +59,14 @@ public:
 		HR_AugLag_n_iterations_without_report( HR_AugLag_conf("reports_frequency",HR_AugLag_n_iterations_without_report)-1 )
 	{}
 
+
 	void run()
 	{
 		printf("\n-------------------------------------------------------\n"
 				 "|                Low Resolution stage                 |\n"
 				 "-------------------------------------------------------\n");
-		auto output = make_residual_table(report_header_reprint_frequency,std::cout,10,15,15,12);
-		ConvergenceMonitor residuals("lowResolution",{"|Un+1-Un|L2","|Tn+1-Tn|L2","ControlParam"});
+		auto output = make_residual_table(report_header_reprint_frequency,std::cout,10,15,17,12);
+		ConvergenceMonitor residuals("lowResolution",{"|Un+1-Un|L2","|Gamdot-Gam|L2","ControlParam"});
 		size_t niter = 0;
 
 		AL.set_rhs_const_part_to_discrete_dirichlet_rhs();
@@ -75,59 +76,28 @@ public:
 			for(size_t i=0; i<LR_n_iterations_without_report; ++i)
 				uniflow_iteration(dirichlet_rhs);
 			niter += LR_n_iterations_without_report;
-			Float Ures, Tres;
-			AL.save_stress_velocity();
+			Float Ures, Gamres;
+			AL.save_strain_velocity();
 			uniflow_iteration(dirichlet_rhs);
-			AL.report_stress_velocity_change(Tres,Ures);
+			AL.report_strain_velocity_change(Gamres,Ures);
 
-			residuals.add_point(++niter,{Ures,Tres,predictor.get_input()});
-			output.print_header_if_needed("\niteration","|Un+1-Un|L2","|Tn+1-Tn|L2","Parameter");
-			output.print(niter,Ures,Tres,predictor.get_input());
+			residuals.add_point(++niter,{Ures,Gamres,predictor.get_input()});
+			output.print_header_if_needed("\niteration","|Un+1-Un|L2","|Gamdot-Gam|L2","Parameter");
+			output.print(niter,Ures,Gamres,predictor.get_input());
 		}
 		residuals.save_to_file();
 		printf("\n>>> Unit flow low resolution stage finishde");
 		print_solution_convergence_message( niter<LR_max_iteration );
 
 
-
-		printf("\n-------------------------------------------------------\n"
-				 "|                High Resolution stage                |\n"
-				 "-------------------------------------------------------\n");
-		predictor.set_tolerance_and_Maxiteration(HR_converge_limit,HR_max_iteration);
-		predictor.reset();
-		ConvergenceMonitor HR_residuals("highRes_flowrate",{"ControlParam","FlowRate"});
-		residuals.rename_and_init("highRes_augmentedlag",{"|Un+1-Un|L2","|Tn+1-Tn|L2"});
-
-		while( predictor.not_converged_and_have_iterations_left() )
-		{
-			auto output = make_residual_table(report_header_reprint_frequency,std::cout,10,15,15);
-			niter = 0;
-			residuals.clear();
-			AL.vel_rhs_const_part() = rhs_control.get_rhs( predictor.get_input() ) + dirichlet_rhs;
-			for(;niter<HR_AugLag_max_iteration;)
-			{
-				Float Tres, Ures;
-				AL.iterate_ntimes_report_stress_velocity_change(HR_AugLag_n_iterations_without_report,Tres,Ures);
-				niter += HR_AugLag_n_iterations_without_report+1;
-
-				residuals.add_point(niter,{Ures,Tres});
-				output.print_header_if_needed("\niteration","|Un+1-Un|L2","|Tn+1-Tn|L2");
-				output.print(niter,Ures,Tres);
-				if( HR_AugLag_min_iteration<niter && residuals.is_converged(HR_AugLag_converge_limit) )
-					break;
-			}
-
-			Float const flux = get_flowrate();
-			printf("[Iter %lu] Control parameter: %g, Flowrate: %g\n\n",
-					predictor.n_iterations_done(), predictor.get_input(), flux);
-			HR_residuals.add_point(predictor.n_iterations_done(),{predictor.get_input(),flux});
-
-			predictor.predict_new_input(flux);
+		if( 0<HR_max_iteration ){
+			printf("\n-------------------------------------------------------\n"
+					 "|                High Resolution stage                |\n"
+					 "-------------------------------------------------------\n");
+			high_resolution_stage(dirichlet_rhs);
 		}
-		AL.update_lagrangeMultipliers_clac_strain_rate_multiplier();
 
-		residuals.save_to_file();
-		HR_residuals.save_to_file();
+		AL.update_lagrangeMultipliers_clac_strain_rate_multiplier();
 		rheolef::odiststream o(AL.geo_name(),"field");
 		write_to_diststream(o,"ControlParam", predictor.get_input(),
 				              "Flowrate", get_flowrate() );
@@ -139,6 +109,41 @@ public:
 	{return AL.adapt_criteria();}
 
 private:
+
+	void high_resolution_stage( field const& dirichlet_rhs )
+	{
+		predictor.set_tolerance_and_Maxiteration(HR_converge_limit,HR_max_iteration);
+		predictor.reset();
+		ConvergenceMonitor residuals("highRes_augmentedlag",{"|Un+1-Un|L2","|Gamdot-Gam|L2"});
+
+		while( predictor.not_converged_and_have_iterations_left() )
+		{
+			auto output = make_residual_table(report_header_reprint_frequency,std::cout,10,15,17);
+			size_t niter = 0;
+			residuals.clear();
+			AL.vel_rhs_const_part() = rhs_control.get_rhs( predictor.get_input() ) + dirichlet_rhs;
+			AL.reset_lagrangeMultipliers();
+			for(;niter<HR_AugLag_max_iteration;)
+			{
+				Float Gamres, Ures;
+				AL.iterate_ntimes_report_strain_velocity_change(HR_AugLag_n_iterations_without_report,Gamres,Ures);
+				niter += HR_AugLag_n_iterations_without_report+1;
+
+				residuals.add_point(niter,{Ures,Gamres});
+				output.print_header_if_needed("\niteration","|Un+1-Un|L2","|Gamdot-Gam|L2");
+				output.print(niter,Ures,Gamres);
+				if( HR_AugLag_min_iteration<niter && residuals.is_converged(HR_AugLag_converge_limit) )
+					break;
+			}
+
+			Float const flux = get_flowrate();
+			printf("[Iter %u] Control parameter: %g, Flowrate: %g\n\n",
+					predictor.n_iterations_done(), predictor.get_input(), flux);
+
+			predictor.predict_new_input(flux);
+		}
+		residuals.save_to_file();
+	}
 
 	void uniflow_iteration( field const& dirichlet_rhs )
 	{
@@ -155,12 +160,11 @@ private:
 	}
 
 	Float get_flowrate() const
-	{return fabs( flowrate.calc_flux() );}
+	{return flowrate.calc_flux();}
 
 	VelocityRHSManipulator rhs_control;
 	BorderFluxCalculator const flowrate;
 	AugmentedLagrangian_basic<VelocityMinimizationSolver> AL;
-//	ConvergenceMonitor residuals;
 	size_t const report_header_reprint_frequency;
 
 	XMLConfigFile const LowResolution_conf;

@@ -28,6 +28,9 @@ struct L2norm_calculator
 	void save_field()
 	{field_old = *f;}
 
+	rheolef::Float calculate_fieldL2( field const& f ) const
+	{return rheolef::sqrt(mass(f,f));}
+
 	/// This function is invoked after f has changed
 	rheolef::Float calculate_field_change();
 };

@@ -43,7 +43,7 @@ private:
 		recurse_print(tail...);
 	}
 
-	void recurse_print()
+	void recurse_print() const
 	{out<<'\n';}
 };
 

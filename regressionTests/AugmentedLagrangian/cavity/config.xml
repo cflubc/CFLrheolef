@@ -8,32 +8,31 @@
     </FEfields>
 
     <AugmentedLagrangian>
-        <Bn>1</Bn>
+        <Bn>10</Bn>
         <a>10</a>             
     </AugmentedLagrangian>
 
    <convergence_limit>1E-5</convergence_limit>
-   <max_iteration>300</max_iteration>
-   <reports_frequency>10</reports_frequency>    
+   <max_iteration>1000</max_iteration>
+   <reports_frequency>50</reports_frequency>    
 
-   <mesh>
+   <Mesh>
       <name>cavity</name>
       <type>full</type>
       <width>1</width>
       <length>1</length>
-      <command_line_args>-hmax .1</command_line_args>
-      <plot_mesh_args>-gnuplot</plot_mesh_args>
-   </mesh>
+      <command_line_args>-hmax .07</command_line_args>
+      <plot_mesh_args>no</plot_mesh_args>
+   </Mesh>
 
     <Adaptation>
-        <cycles>1</cycles>
-        <max_vertices>10000</max_vertices>
-        <hmin>.01</hmin>
-        <hmax>.3</hmax>
-        <hcoef>4</hcoef>
-        <err>5E-3</err>
-        <additional>-RelError</additional>
+        <cycles>4</cycles>
+        <n_vertices_max>40000</n_vertices_max>
+        <hmin>.005</hmin>
+        <hmax>.1</hmax>
+        <hcoef>7 6</hcoef>
+        <err>1E-3</err>
     </Adaptation>
-    
-   <source_term></source_term> 
+ 
+    <source_term></source_term>
 </data>
