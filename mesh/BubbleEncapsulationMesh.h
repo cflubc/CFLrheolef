@@ -17,10 +17,11 @@
 
 #include "CFL.h"
 #include "ConfigXML.h"
+#include "MathUtility.h"
 #include "PrintArguments.h"
 #include "bamgcad.h"
 #include "ParametricCurves.h"
-#include "ParametricCurveMeshGen.h"
+#include "CFLParametricMeshGen.h"
 
 
 class BubbleEncapsulationMesh
@@ -31,14 +32,15 @@ class BubbleEncapsulationMesh
 public:
 
 	BubbleEncapsulationMesh( XMLConfigFile const& conf, string const& base_name ):
-		rx( .5*XML_VAL(conf,rx,"bubble_length") ),
-		ry( .5*XML_VAL(conf,ry,"bubble_width") ),
-		 D( .5*XML_VAL(conf,D,"channel_width") ),
-		 L( .5*XML_VAL(conf,L,"channel_length") ),
+		rx( .5*conf("bubble_length",rx) ),
+		ry( .5*conf("bubble_width",ry) ),
+		 D( .5*conf("channel_width",D) ),
+		 L( .5*conf("channel_length",L) ),
 		shape(rx,ry),
-		paramesh( conf({"ParametricCurve_mesh","max_dTheta"},rx),
-				  conf({"ParametricCurve_mesh","max_ds"},rx) )
+		curve_integrator( conf.child("ParametricCurve_mesh") )
 	{
+		X.reserve(300);
+		Y.reserve(300);
 		string const type( conf("type") );
 		if( type=="symx" )
 			symx(base_name);
@@ -50,7 +52,8 @@ public:
 
 	void symxy( string const& base_name )
 	{
-//		paramesh.gen_mesh(shape,1.5*PI,2.*PI,&X,&Y);
+		ExclusiveInterval<double> range(1.5*PI,2.*PI);
+		gen_parametric_curve_mesh(shape,curve_integrator,range,&X,&Y);
 
 		size_t const nbubble = X.size();
 		size_t const ntrivial_vertices = 5;
@@ -87,21 +90,8 @@ public:
 
 	void symx( string const& base_name )
 	{
-//		paramesh.gen_mesh(shape,PI,2.*PI,&X,&Y);
-		double const tbeg = PI;
-		double const tend = 2.*PI;
-		size_t const Np = 30;
-		double const dt = (tend-tbeg)/(Np+1);
-		std::vector<double> points(Np);
-		X.resize(Np);
-		Y.resize(Np);
-		double t = tbeg;
-		for(size_t i=0; i<Np; ++i){
-			t += dt;
-			X[i] = shape.x(t);
-			Y[i] = shape.y(t);
-		}
-
+		ExclusiveInterval<double> range(PI,2.*PI);
+		gen_parametric_curve_mesh(shape,curve_integrator,range,&X,&Y);
 
 		size_t const nbubble = X.size();
 		size_t const ntrivial_vertices = 6;
@@ -148,7 +138,7 @@ private:
 	double const  L;
 
 	shape_ellipse shape;
-	ParametricCurveMeshGen<double,false,false,true> paramesh;
+	CFLCurveIntegrator curve_integrator;
 	std::vector<double> X;
 	std::vector<double> Y;
 

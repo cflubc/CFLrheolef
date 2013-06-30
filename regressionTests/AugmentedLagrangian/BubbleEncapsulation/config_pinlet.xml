@@ -24,7 +24,7 @@
 
    <Mesh>
       <name>bubb</name>
-      <type>symx</type>
+      <type>symxy</type>
       <bubble_length>.8</bubble_length>
       <bubble_width>.1</bubble_width>
       <channel_width>1</channel_width>
@@ -33,7 +33,7 @@
       <plot_mesh_args>no</plot_mesh_args>
 
       <ParametricCurve_mesh>
-         <max_dTheta>.05</max_dTheta>
+         <max_dTheta>.1</max_dTheta>
          <max_ds>.1</max_ds>
       </ParametricCurve_mesh>
    </Mesh>

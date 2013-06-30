@@ -14,9 +14,10 @@
 #include <stdexcept>
 
 #include "ConfigXML.h"
+#include "MathUtility.h"
 #include "bamgcad.h"
 #include "ParametricCurves.h"
-#include "ParametricCurveMeshGen.h"
+#include "CFLParametricMeshGen.h"
 
 
 class WavyChannelMesh
@@ -27,9 +28,10 @@ public:
 
 	WavyChannelMesh( XMLConfigFile const& conf, std::string const& base_name ):
 		wall( .5*conf("H",double()), conf("L",double()) ),
-		paramesh( conf({"ParametricCurve_mesh","max_dTheta"},double()),
-				  conf({"ParametricCurve_mesh","max_ds"},double()) )
+		curve_integrator( conf.child("ParametricCurve_mesh") )
 	{
+		X.reserve(300);
+		Y.reserve(300);
 		std::string const type( conf("type") );
 		if( type=="symxy" )
 			symxy(base_name);
@@ -40,15 +42,10 @@ public:
 
 private:
 
-	wavy_wall wall;
-	ParametricCurveMeshGen<double,false,false,true> paramesh;
-	std::vector<double> X;
-	std::vector<double> Y;
-
-
 	void symxy( std::string const& base_name )
 	{
-		paramesh.gen_mesh(wall,-wall.half_of_wavelength,0.,&X,&Y);
+		Interval<double,interval_constants::exclusive> const range(-wall.half_of_wavelength,0.);
+		gen_parametric_curve_mesh(wall,curve_integrator,range,&X,&Y);
 
 		size_t const nwall = X.size();
 		size_t const ntrivial_vertices = 4;
@@ -79,6 +76,11 @@ private:
 				"top";
 		fdmn.close();
 	}
+
+	wavy_wall wall;
+	CFLCurveIntegrator curve_integrator;
+	std::vector<double> X;
+	std::vector<double> Y;
 };
 
 #endif /* WAVYCHANNELMESH_H_ */
