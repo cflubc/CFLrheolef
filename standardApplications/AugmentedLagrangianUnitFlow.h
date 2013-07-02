@@ -24,12 +24,83 @@
 #include "ResidualTablePrinter.h"
 #include "AugmentedLagrangian_basic.h"
 
+
+
+template< bool isLinear >
+class unitflow_iterator;
+
+template<>
+class unitflow_iterator<false>
+{
+public:
+	template< typename UnitFlowApp, typename FieldPool >
+	unitflow_iterator( UnitFlowApp *const, FieldPool& ) {}
+
+	template< typename UnitFlowApp >
+	static void iterate( UnitFlowApp *const app, rheolef::field const& dirichlet_rhs )
+	{app->nonlinear_uniflow_iteration(dirichlet_rhs);}
+};
+
+template<>
+class unitflow_iterator<true>
+{
+	typedef rheolef::field field;
+	typedef rheolef::Float Float;
+
+public:
+	template< typename UnitFlowApp, typename FieldPool >
+	unitflow_iterator( UnitFlowApp *const app, FieldPool& fields ):
+		Uh( calc_normalrhs_flow_helper(app,fields) ),
+		normalrhs_Uh(fields.Uh()),
+		normalrhs_flowrate( app->get_flowrate() )
+	{}
+
+	template< typename UnitFlowApp >
+	void iterate( UnitFlowApp *const app, field const& dirichlet_rhs )
+	{
+		auto& predictor = app->predictor;
+		auto& AL = app->AL;
+		AL.solve_vel_minization();
+		Float const flowrate_discripency = predictor.get_target_val()-app->get_flowrate();
+		Float const param = flowrate_discripency/normalrhs_flowrate;
+		Uh += param*normalrhs_Uh;
+		predictor.set_input(param);
+		AL.update_lagrangeMultipliers_fast();
+		AL.vel_rhs_var_part() = AL.augmented_lagraniang_rhs() + dirichlet_rhs;
+	}
+
+private:
+	template< typename UnitFlowApp, typename FieldPool >
+	static field& calc_normalrhs_flow_helper( UnitFlowApp *const app, FieldPool& fields )
+	{
+		auto& predictor = app->predictor;
+		auto& AL = app->AL;
+		app->AL.set_rhs_const_part_to_discrete_dirichlet_rhs();
+		app->AL.vel_rhs_var_part() = app->rhs_control.get_rhs();
+		app->AL.solve_vel_minization();
+
+		return fields.Uh();
+	}
+
+	field& Uh;
+	field const normalrhs_Uh;
+	Float const normalrhs_flowrate;
+};
+
+
+
+
 template< typename VelocityMinimizationSolver, typename VelocityRHSManipulator >
 class AugmentedLagrangianUnitFlow
 {
 	typedef rheolef::field field;
 	typedef rheolef::Float Float;
 	typedef std::size_t size_t;
+
+	enum : bool { useLinearOptimization =  VelocityMinimizationSolver::isLinear &&
+                                               VelocityRHSManipulator::isLinear  };
+	typedef unitflow_iterator<useLinearOptimization> UnitFlowIterator;
+	friend UnitFlowIterator;
 
 public:
 
@@ -56,7 +127,8 @@ public:
 		XML_INIT_VAR(HR_AugLag_conf,HR_AugLag_converge_limit,"convergence_limit"),
 		XML_INIT_VAR(HR_AugLag_conf,HR_AugLag_max_iteration,"max_iteration"),
 		XML_INIT_VAR(HR_AugLag_conf,HR_AugLag_min_iteration,"min_iteration"),
-		HR_AugLag_n_iterations_without_report( HR_AugLag_conf("reports_frequency",HR_AugLag_n_iterations_without_report)-1 )
+		HR_AugLag_n_iterations_without_report( HR_AugLag_conf("reports_frequency",HR_AugLag_n_iterations_without_report)-1 ),
+		unitflow(this,fields)
 	{}
 
 
@@ -74,11 +146,11 @@ public:
 		while( niter<LR_max_iteration && !seq.sequence_steady_state_reached(residuals[2]) )
 		{
 			for(size_t i=0; i<LR_n_iterations_without_report; ++i)
-				uniflow_iteration(dirichlet_rhs);
+				unitflow.iterate(this,dirichlet_rhs);
 			niter += LR_n_iterations_without_report;
 			Float Ures, Gamres;
 			AL.save_strain_velocity();
-			uniflow_iteration(dirichlet_rhs);
+			unitflow.iterate(this,dirichlet_rhs);
 			AL.report_strain_velocity_change(Gamres,Ures);
 
 			residuals.add_point(++niter,{Ures,Gamres,predictor.get_input()});
@@ -107,6 +179,7 @@ public:
 
 	field adapt_criteria() const
 	{return AL.adapt_criteria();}
+
 
 private:
 
@@ -145,22 +218,24 @@ private:
 		residuals.save_to_file();
 	}
 
-	void uniflow_iteration( field const& dirichlet_rhs )
+	Float get_flowrate() const
+	{return flowrate.calc_flux();}
+
+	void nonlinear_uniflow_iteration( field const& dirichlet_rhs )
 	{
 		predictor.reset();
 		// unit flow secant loop
 		while( predictor.not_converged_and_have_iterations_left() )
 		{
 			AL.build_complete_rhs_and_solve_vel_minimization(
-					rhs_control.get_rhs(predictor.get_input()) );
+							rhs_control.get_rhs( predictor.get_input() )
+					 	 	 	 	 	 	 	 	 	 	);
 			predictor.predict_new_input( get_flowrate() );
 		}
 		AL.update_lagrangeMultipliers_fast();
 		AL.vel_rhs_const_part() = AL.augmented_lagraniang_rhs() + dirichlet_rhs;
 	}
 
-	Float get_flowrate() const
-	{return flowrate.calc_flux();}
 
 	VelocityRHSManipulator rhs_control;
 	BorderFluxCalculator const flowrate;
@@ -182,7 +257,10 @@ private:
 	size_t const HR_AugLag_max_iteration;
 	size_t const HR_AugLag_min_iteration;
 	size_t const HR_AugLag_n_iterations_without_report;
+
+	UnitFlowIterator unitflow;
 };
+
 
 
 #endif /* AUGMENTEDLAGRANGIANUNITFLOW_H_ */

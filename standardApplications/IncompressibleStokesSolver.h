@@ -42,6 +42,8 @@ class IncompLinearDiffusionStokesSolver
 	LinearSol solver;
 
 public:
+	enum : bool { isLinear=true };
+
 	template< typename FieldsPool, typename DirichletBC >
 	IncompLinearDiffusionStokesSolver( const XMLConfigFile& conf,
 			                     	   FieldsPool& fields,

@@ -32,6 +32,9 @@ public:
 			  )
 	{}
 
+	Float get_target_val() const
+	{return secant.get_target_val();}
+
 	void reset()
 	{secant.reset();}
 
@@ -46,6 +49,9 @@ public:
 
 	Float get_input() const
 	{return secant.get_input();}
+
+	void set_input( Float const& x )
+	{secant.set_input(x);}
 
 	Float predict_new_input( Float const& f2 )
 	{return secant.predict_new_input(f2);}

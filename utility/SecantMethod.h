@@ -46,6 +46,9 @@ public:
 		converged(false)
 	{}
 
+	T get_target_val() const
+	{ return target; }
+
 	void reset(){
 		iter = 0;
 		converged = false;
@@ -64,6 +67,9 @@ public:
 
 	T get_input() const
 	{return x2;}
+
+	void set_input( T const& x )
+	{x2=x;}
 
 	T get_last_input_change() const
 	{return dx;}

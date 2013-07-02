@@ -23,6 +23,8 @@ class BodyForce
 	const field normalized_rhs;
 
 public:
+	enum : bool { isLinear=true };
+
 	BodyForce( XMLConfigFile const& conf, rheolef::space const& Uspace ):
 		v(Uspace),
 		XML_INIT_VAR(conf,bodyf_vector,"bodyforce_vector"),

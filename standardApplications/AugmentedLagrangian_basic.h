@@ -63,6 +63,8 @@ public:
 		deltaU(fields.Uh())
 	{}
 
+	static constexpr bool isLinear()
+	{return VelocityMinimizationSolver::isLinear();}
 
 	void update_lagrangeMultipliers_fast(){
 		const manip_void x;
