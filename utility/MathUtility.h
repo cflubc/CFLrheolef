@@ -10,12 +10,11 @@
 
 
 /** Options for include/exclude in RangeChecker class */
-struct interval_constants
+enum interval_constants : bool
 {
-	constexpr static bool
 		inclusive=true,   exclusive=false,
 		include_beg=true, exclude_beg=false,
-		include_end=true, exclude_end=false;
+		include_end=true, exclude_end=false
 };
 
 /**
