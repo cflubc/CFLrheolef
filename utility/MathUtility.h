@@ -8,8 +8,11 @@
 #ifndef MATHUTILITY_H_
 #define MATHUTILITY_H_
 
+#include <cmath>
 
-/** Options for include/exclude in RangeChecker class */
+constexpr double PI = std::acos(-1);
+
+
 enum interval_constants : bool
 {
 		inclusive=true,   exclusive=false,
@@ -18,17 +21,18 @@ enum interval_constants : bool
 };
 
 /**
- * Checks whether a number is in range beg,end. User instructs wether wants
- * to include/exclude end points in range.
+ * Checks whether a number is in interval beg,end. User instructs wether wants
+ * to include/exclude end points in interval.
  *
  * Examples:
- *    RangeChecker<double,range_constants::inclusive> x(0,1); //(0,1)
- *    RangeChecker<double,range_constants::include_beg,range_constants::exclude_end> x(0,1); //[0,1)
+ *    Interval<double,interval_constants::inclusive> x(0,1); //(0,1)
+ *    Interval<double,interval_constants::include_beg,interval_constants::exclude_end> x(0,1); //[0,1)
  */
 template< typename T, bool including_beg, bool including_end = including_beg >
 class Interval
 {
 public:
+	Interval(): was_initially_given_reversed(false), beg(-1.), end(-1.) {}
 
 	Interval( T const& endpoint1, T const& endpoint2 ):
 		was_initially_given_reversed( endpoint2<endpoint1 ),
@@ -40,6 +44,9 @@ public:
 		return ( including_beg ? beg<=t:beg<t ) &&
 			   ( including_end ? t<=end:t<end );
 	}
+
+	T length() const
+	{return end-beg;}
 
 	constexpr bool includes_begin() const
 	{return including_beg;}

@@ -29,6 +29,7 @@ bamgmesh_filename( std::string const base )
 class bamgcad
 {
 	typedef std::string string;
+	typedef char const*const tag_str;
 
 	size_t const nvertices;
 	std::ofstream file;
@@ -49,11 +50,24 @@ public:
 	void print_edges_header()
 	{println_args(file,"\nEdges ",nvertices);}
 
-	void print_ordered_edges( size_t const& beg,
+	size_t print_ordered_edges( size_t const& beg,
 			                  size_t const& nedges,
-			                  char const*const tag ){
-		for(size_t i=beg; i<beg+nedges; ++i)
-			print_args(file,i," ",i+1,tag);
+			                  tag_str tag ){
+		size_t const last = beg+nedges;
+		for(size_t i=beg; i<last; ++i)
+			print(i," ",i+1,tag);
+		return last;
+	}
+
+	template< typename Container >
+	void print_points( Container const& X, Container const& Y, char const*const tag ){
+		for(auto x=begin(X), y=begin(Y); x!=end(X); ++x,++y)
+			print(*x," ",*y,tag);
+	}
+
+	size_t print_edge( size_t const& i, tag_str tag ){
+		print(i," ",i+1,tag);
+		return i+1;
 	}
 
 	template< typename... Args >

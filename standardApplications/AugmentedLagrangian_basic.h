@@ -157,14 +157,22 @@ public:
 		solve_vel_minization();
 	}
 
-	void solve_vel_minization()
-	{velocity_minimizer.solve(vel_rhs);}
+	void solve_vel_minization() const {
+//		velocity_minimizer.solve(vel_rhs);
+		solve_vel_minization(vel_rhs);
+	}
+
+	void solve_vel_minization( field const& rhs ) const
+	{velocity_minimizer.solve(rhs);}
 
 	field& vel_rhs_const_part()
 	{return vel_rhs_const;}
 
 	field& vel_rhs_var_part()
 	{return vel_rhs;}
+
+	field const& get_strainRate_lagrangeMultiplier() const
+	{return Gam;}
 
 private:
 	Float const Bn;      ///< Bingham number

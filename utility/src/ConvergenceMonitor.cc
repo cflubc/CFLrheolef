@@ -17,9 +17,7 @@
 ConvergenceMonitor::ConvergenceMonitor(
 		 	 	 	string const& name,
 					std::initializer_list<cstr> names ):
-//					,double const& error_limit ):
 	file_name_base(name),
-//	absolute_error(error_limit),
 	param_names( begin(names), end(names) ),
 	converge_histories( names.size() )
 {}
@@ -53,14 +51,18 @@ ConvergenceMonitor::is_converged( double const& err ) const
 void
 ConvergenceMonitor::rename_and_init( string const& name,
 					     			 std::initializer_list<cstr> names )
-//					     			 ,double const& error_limit )
 {
 	file_name_base = name;
 	param_names.assign( begin(names), end(names) );
-//	absolute_error = error_limit;
 	clear();
 }
 
+void
+ConvergenceMonitor::rename_and_init( string const& name )
+{
+	file_name_base = name;
+	clear();
+}
 
 void
 ConvergenceMonitor::clear()

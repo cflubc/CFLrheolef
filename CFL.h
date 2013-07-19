@@ -24,7 +24,6 @@ typedef const char* cstr;
 
 constexpr cstr CFL_FieldsPool_Module = "FEfields";
 constexpr cstr CFL_SaveFolder_BaseName = "result";
-constexpr double PI = std::acos(-1);
 
 
 inline bool

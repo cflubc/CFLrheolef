@@ -112,8 +112,9 @@ void XMLConfigFile::operator()( xmlpath path, T *const val ) const
 }
 
 template< typename T >
-T XMLConfigFile::operator()( xmlpath path, T val ) const
+T XMLConfigFile::operator()( xmlpath path, T ) const
 {
+	T val;
 	operator()(path,&val);
 	return val;
 }

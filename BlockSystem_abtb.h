@@ -140,7 +140,7 @@ public:
 		abtb_method(cf,a,b)
 	{}
 
-	void solve( field& Uh, field& Ph, field& rhs ) const
+	void solve( field& Uh, field& Ph, field const& rhs ) const
 	{
 		abtb_method.solve( rhs.u(), p_rhs, Uh.set_u(), Ph.set_u() );
 	}

@@ -29,7 +29,6 @@ public:
 
 	ConvergenceMonitor( string const& file_name,
 			            std::initializer_list<cstr> param_names );
-//			            ,double const& error_limit = 1e-3 );
 
 	void add_point( const size_t iter, std::initializer_list<double> vals );
 
@@ -38,9 +37,8 @@ public:
 	convergence_history const& operator[]( size_t i )
 	{return converge_histories[i];}
 
-	void rename_and_init( string const& name,
-			     	 	  std::initializer_list<cstr> names );
-//			     	 	  ,double const& error_limit );
+	void rename_and_init( string const& name, std::initializer_list<cstr> names );
+	void rename_and_init( string const& name );
 
 	void clear();
 
@@ -58,7 +56,6 @@ public:
 private:
 
 	string file_name_base;
-//	double absolute_error;
 	std::vector<size_t> iteration;
 	std::vector<cstr> param_names;
 	std::vector<convergence_history> converge_histories;

@@ -24,7 +24,7 @@
 
    <Mesh>
       <name>bubb</name>
-      <type>symxy</type>
+      <type>symx</type>
       <bubble_length>.8</bubble_length>
       <bubble_width>.1</bubble_width>
       <channel_width>1</channel_width>

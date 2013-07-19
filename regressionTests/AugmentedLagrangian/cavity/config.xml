@@ -26,12 +26,14 @@
    </Mesh>
 
     <Adaptation>
-        <cycles>4</cycles>
-        <n_vertices_max>40000</n_vertices_max>
+        <cycles>3</cycles>
+        <n_vertices_max>10000</n_vertices_max>
         <hmin>.005</hmin>
         <hmax>.1</hmax>
-        <hcoef>7 6</hcoef>
+        <hcoef>6</hcoef>
+        <ratio>1</ratio>
         <err>1E-3</err>
+        <additional>-RelError</additional>
     </Adaptation>
  
     <source_term></source_term>

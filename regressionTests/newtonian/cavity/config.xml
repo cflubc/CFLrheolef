@@ -13,7 +13,7 @@
       <width>1</width>
       <length>1</length>
       <type>full</type>
-      <command_line_args>-hmax .1</command_line_args>
+      <command_line_args>-hmax .5</command_line_args>
    </Mesh>
 
     <Adaptation>

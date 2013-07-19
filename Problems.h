@@ -22,6 +22,7 @@
 #include "BubbleEncapsulationMesh.h"
 #include "ChannelMesh.h"
 #include "WavyChannelMesh.h"
+#include "FlowOnsetDetection.h"
 
 
 struct voidMesh {
@@ -83,13 +84,20 @@ struct Problem_AugLag_SteadyCavity
 
 struct Problem_AugLag_BubbleEncapsulation
 {
-	typedef StandardAugmentedLagrangian<StokesFlow,NormalStressBC_RHS> Application;
+	typedef AugmentedLagrangianUnitFlow<StokesFlow,NormalStressBC_RHS> Application;
 	typedef bubble_BC  BC;
 	typedef FlowFields FieldsPool;
 	typedef BubbleEncapsulationMesh Mesh;
 	static constexpr cstr Name = "AugLag_BubbleEncapsulation";
 };
 
-
+struct Problem_MacroBubbleFlowOnset
+{
+	typedef FlowOnsetDetection<StokesFlow,BodyForce> Application;
+	typedef bubble_BC  BC;
+	typedef FlowFields FieldsPool;
+	typedef BubbleEncapsulationMesh Mesh;
+	static constexpr cstr Name = "MacroBubbleFlowOnset";
+};
 
 #endif /* PROBLEMS_H_ */

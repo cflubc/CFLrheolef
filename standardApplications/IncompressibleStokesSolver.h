@@ -84,7 +84,7 @@ public:
 		o.close();
 	}
 
-	void solve( field& rhs )
+	void solve( field const& rhs ) const
 	{solver.solve(uh,ph,rhs);}
 
 	void set_discrete_dirichlet_rhs( field& urhs ) {

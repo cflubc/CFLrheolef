@@ -14,7 +14,7 @@
     </AugmentedLagrangian>
 
    <convergence_limit>5E-6</convergence_limit>
-   <max_iteration>2000</max_iteration>
+   <max_iteration>800</max_iteration>
    <reports_frequency>50</reports_frequency>
    <report_header_reprint_frequency>30</report_header_reprint_frequency>
 

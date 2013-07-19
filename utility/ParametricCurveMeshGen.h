@@ -35,13 +35,13 @@
 
 
 template< typename T >
-class ConstantCurveIntegrator
+class ConstantPointCurveIntegrator
 {
 	std::size_t const Npoints;
 	T dt;
 
 public:
-	ConstantCurveIntegrator( size_t const n ): Npoints(n) {}
+	ConstantPointCurveIntegrator( size_t const n ): Npoints(n) {}
 
 	void set_range( T const& beg, T const& end )
 	{dt = (end-beg)/(Npoints+1);}
@@ -50,6 +50,7 @@ public:
 	T calc_delta_of_curve_parameter( Curve const&, T const& ) const
 	{return dt;}
 };
+
 
 
 template< typename T >
@@ -66,6 +67,7 @@ struct curve_first_derivative
 		dx2plusdy2( dx*dx+dy*dy )
 	{}
 };
+
 
 struct FirstOrderCurveIntegrator
 {
@@ -111,6 +113,12 @@ private:
 };
 
 
+/** if the curve is straight line, we get a division by zero in
+ * @c calc_curve_parameter_increment_2get_const_twist functions.
+ * So overload @c calc_delta_of_curve_parameter function for the straight line.
+ * Here forward declare the class to use it for defining the overload.*/
+struct straight_line;
+
 template< typename T, typename IntegrationMethod >
 class CurveIntegrator
 {
@@ -132,14 +140,24 @@ public:
 		if( points_distance_limit<distance_of_points(crv,t,t+dt) )
 			// this shows that curve here is almost straight line, use this to find
 			// proper dt which approximately gives distance of points as points_distance_limit
-			return points_distance_limit/sqrt(df.dx2plusdy2);
+			return delta_of_curve_parameter_for_straight_line(df);
 		else
 			return dt;
+	}
+
+	T calc_delta_of_curve_parameter( straight_line const& crv, T const& t ) const
+	{
+		static const T dt =
+		delta_of_curve_parameter_for_straight_line( curve_first_derivative<T>(crv,t) );
+		return dt;
 	}
 
 private:
 	T const delta_teta_limit;
 	T const points_distance_limit;
+
+	T delta_of_curve_parameter_for_straight_line( curve_first_derivative<T> const& d ) const
+	{return points_distance_limit/sqrt(d.dx2plusdy2);}
 
 	template< typename Curve >
 	static T distance_of_points( Curve const& crv, T const& t1, T const& t2 ){
@@ -149,7 +167,6 @@ private:
 	static T sqr( T const& t )
 	{return t*t;};
 };
-
 
 
 template< typename T,
@@ -203,6 +220,22 @@ gen_parametric_curve_mesh(
 	}
 }
 
+
+template< typename T, typename Interval >
+void gen_straight_line_mesh(
+			straight_line const& crv,
+			T const& ds,
+			std::vector<T> *const X,
+			std::vector<T> *const Y,
+			Interval)
+{
+	// for straight line the interval is always 0 to 1
+	Interval const range(0,1);
+	// here FirstOrderCurveIntegrator and 0 in the constructor are
+	// dummy and not important
+	CurveIntegrator<T,FirstOrderCurveIntegrator> const I(0,ds);
+	gen_parametric_curve_mesh(crv,I,range,X,Y);
+}
 
 
 #endif /* PARAMETRICCURVEMESHGEN_H_ */

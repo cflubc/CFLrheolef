@@ -19,7 +19,7 @@
 class CFLConstCurveIntegrator
 {
 	typedef rheolef::Float Float;
-	ConstantCurveIntegrator<Float> I;
+	ConstantPointCurveIntegrator<Float> I;
 
 public:
 

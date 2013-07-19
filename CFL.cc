@@ -38,9 +38,9 @@ void assert_equal( const rheolef::field& f1, const rheolef::field& f2 )
 void print_solution_convergence_message( bool converged )
 {
 	if( converged )
-		printf("\nThe solution converged... :-)\n\n");
+		printf("\nThe solution converged... :-)\n");
 	else
-		printf("\nMax limit of iterations reached, stopping...\n\n");
+		printf("\nMax limit of iterations reached, stopping...\n");
 }
 
 void CFL_mkresult_folder_and_cd_to_it( int iadapt )

@@ -8,12 +8,14 @@
     </FEfields> 
 
     <AugmentedLagrangian>
-        <Bn>2</Bn>
+        <Bn>3</Bn>
         <a>10</a>      
     </AugmentedLagrangian>
 
    <unitflow_rhs_controller>
        <edge_name>left</edge_name>
+       <normal_stress_value>1</normal_stress_value>
+       <!--bodyforce_vector>1 0 0</bodyforce_vector-->
    </unitflow_rhs_controller>
 
 
@@ -21,7 +23,7 @@
    <report_header_reprint_frequency>30</report_header_reprint_frequency>
 
    <LowResolution_step>
-      <max_iteration>700</max_iteration>
+      <max_iteration>600</max_iteration>
       <reports_frequency>50</reports_frequency>   
 
       <SteadyAnalyser>
@@ -32,7 +34,7 @@
       <Secant>
          <max_iter>4</max_iter>
          <tolerance>1E-3</tolerance>
-         <target>1.</target>
+         <target>-1.</target>
          <initial_point>0 0</initial_point>
          <next_input>3.</next_input>
       </Secant>
@@ -40,7 +42,7 @@
 
 
    <HighResolution_step>
-      <max_iteration>4</max_iteration>
+      <max_iteration>0</max_iteration>
       <flowrate_convergence_limit>1E-5</flowrate_convergence_limit>
 
       <AugmentedLag>
@@ -60,8 +62,8 @@
       <channel_length>2</channel_length>
       
       <ParametricCurve_mesh>
-         <max_dTheta>.3</max_dTheta>
-         <max_ds>.3</max_ds>
+         <max_dTheta>.1</max_dTheta>
+         <max_ds>.1</max_ds>
       </ParametricCurve_mesh>
       <command_line_args>-hmax .1</command_line_args>
       <plot_mesh_args>no</plot_mesh_args>
@@ -71,10 +73,11 @@
         <cycles>4</cycles>
         <hmin>.001</hmin>
         <hmax>.1</hmax>
-        <hcoef>1 .5</hcoef>
+        <hcoef>2 1</hcoef>
         <ratio>1</ratio>
-        <err>3E-3</err>
+        <err>2E-4</err>
         <errg>1e-3</errg>
-        <n_vertices_max>50000</n_vertices_max>
+        <additional>-AbsError</additional>
+        <n_vertices_max>20000</n_vertices_max>
     </Adaptation>    
 </data>
