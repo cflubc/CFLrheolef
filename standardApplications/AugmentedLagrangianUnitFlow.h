@@ -60,13 +60,11 @@ public:
 	{
 		auto& predictor = app->predictor;
 		auto& AL = app->AL;
-		AL.solve_vel_minization();
+		AL.solve_vel_minization( AL.vel_rhs_const_part() );
 		Float const flowrate_discripency = predictor.get_target_val()-app->get_flowrate();
 		Float const param = flowrate_discripency/normalrhs_flowrate;
 		Uh += param*normalrhs_Uh;
 		predictor.set_input(param);
-		AL.update_lagrangeMultipliers_fast();
-		AL.vel_rhs_var_part() = AL.augmented_lagraniang_rhs() + dirichlet_rhs;
 	}
 
 private:
@@ -146,11 +144,11 @@ public:
 		while( niter<LR_max_iteration && !seq.sequence_steady_state_reached(residuals[2]) )
 		{
 			for(size_t i=0; i<LR_n_iterations_without_report; ++i)
-				unitflow.iterate(this,dirichlet_rhs);
+				unitlfow_iteration(dirichlet_rhs);
 			niter += LR_n_iterations_without_report;
 			Float Ures, Gamres;
 			AL.save_strain_velocity();
-			unitflow.iterate(this,dirichlet_rhs);
+			unitlfow_iteration(dirichlet_rhs);
 			AL.report_strain_velocity_change(Gamres,Ures);
 
 			residuals.add_point(++niter,{Ures,Gamres,predictor.get_input()});
@@ -221,6 +219,13 @@ private:
 	Float get_flowrate() const
 	{return flowrate.calc_flux();}
 
+	void unitlfow_iteration( field const& dirichlet_rhs )
+	{
+		unitflow.iterate(this,dirichlet_rhs);
+		AL.update_lagrangeMultipliers_fast();
+		AL.vel_rhs_const_part() = AL.augmented_lagraniang_rhs() + dirichlet_rhs;
+	}
+
 	void nonlinear_uniflow_iteration( field const& dirichlet_rhs )
 	{
 		predictor.reset();
@@ -232,8 +237,6 @@ private:
 					 	 	 	 	 	 	 	 	 	 	);
 			predictor.predict_new_input( get_flowrate() );
 		}
-		AL.update_lagrangeMultipliers_fast();
-		AL.vel_rhs_const_part() = AL.augmented_lagraniang_rhs() + dirichlet_rhs;
 	}
 
 

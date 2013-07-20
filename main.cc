@@ -25,7 +25,7 @@
  * of restart, reads the proper geometry and pass to adapt loop
  */
 
-typedef Problem_AugLag_BubbleEncapsulation  Problem;
+typedef Problem_WavyChannelFouling  Problem;
 typedef Problem::BC  DirichletBoundaryConditions;
 typedef Problem::FieldsPool  FieldsPool;
 typedef Problem::Mesh  Mesh;

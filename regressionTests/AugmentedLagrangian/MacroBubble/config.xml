@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+    <problem>MacroBubbleFlowOnset</problem>
+
+    <FEfields>
+        <pspace>P1</pspace>
+        <vspace>P2</vspace>
+        <BCtype>full</BCtype>
+    </FEfields>    
+
+    <!--force_param_initial_bounds>2 2</force_param_initial_bounds-->
+	<rhs_force_term>
+       <normal_stress_value>1</normal_stress_value>
+	   <edge_name>left</edge_name>
+	</rhs_force_term>
+    <force_param_delta>.5</force_param_delta>
+    <force_param_tolerance>.01</force_param_tolerance>
+
+	<Solver>
+		<AugmentedLagrangian>
+		    <Bn>1</Bn>
+		    <a>10</a>
+		</AugmentedLagrangian>
+
+	   <convergence_limit>5E-6</convergence_limit>
+	   <max_iteration>10</max_iteration>
+	   <reports_frequency>1</reports_frequency>
+	   <report_header_reprint_frequency>30</report_header_reprint_frequency>
+	</Solver>
+
+   <Mesh>
+      <name>macroBub</name>
+      <type>symx</type>
+      <bubble_length>.8</bubble_length>
+      <bubble_width>.1</bubble_width>
+      <channel_width>1</channel_width>
+      <channel_length>2</channel_length>
+      <command_line_args>-hmax .5</command_line_args>
+      <use_fineMesh_on_wall>yes</use_fineMesh_on_wall>
+      <hwall>.01</hwall>
+      <plot_mesh_args>no</plot_mesh_args>
+
+      <ParametricCurve_mesh>
+         <max_dTheta>.5</max_dTheta>
+         <max_ds>.05</max_ds>
+      </ParametricCurve_mesh>
+   </Mesh>
+
+    <Adaptation>
+        <cycles>3</cycles>
+        <hmin>.005</hmin>
+        <hmax>.1</hmax>
+        <hcoef>1</hcoef>
+        <ratio>1</ratio>
+        <err>1e-3</err>
+        <errg>1e-3</errg>
+        <additional>-AbsError</additional>
+        <n_vertices_max>10000</n_vertices_max>
+    </Adaptation>    
+</data>
