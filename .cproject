@@ -21,7 +21,7 @@
 							<builder buildPath="${workspace_loc:/CFLrheolef}/Debug" id="cdt.managedbuild.target.gnu.builder.exe.debug.209015683" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="2" superClass="cdt.managedbuild.target.gnu.builder.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.2125459672" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool command="g++ -std=c++11" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.817912969" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
-								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.916490369" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.more" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.916490369" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.2013133768" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.340653918" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/utility}&quot;"/>
@@ -33,14 +33,14 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/externlib/TinyXML++}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/externlib}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/adaptivity}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-6.4/include"/>
-									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-6.4/lib"/>
+									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-dev/include"/>
+									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-dev/lib"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.warnings.toerrors.1396769311" name="Warnings as errors (-Werror)" superClass="gnu.cpp.compiler.option.warnings.toerrors" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.other.other.1220187825" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -Wno-unused -Wno-strict-aliasing" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.warnings.extrawarn.880579508" name="Extra warnings (-Wextra)" superClass="gnu.cpp.compiler.option.warnings.extrawarn" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.warnings.wconversion.349605272" name="Implicit conversion warnings (-Wconversion)" superClass="gnu.cpp.compiler.option.warnings.wconversion" value="false" valueType="boolean"/>
-								<option id="gnu.cpp.compiler.option.optimization.flags.429063445" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" value="-march=native -pipe" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.optimization.flags.429063445" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" value="-pipe" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1521459913" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.617519423" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
@@ -57,9 +57,9 @@
 									<listOptionValue builtIn="false" value="amd"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.1302734132" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-6.4/lib"/>
+									<listOptionValue builtIn="false" value="/home/ali/Install/rheolef-dev/lib"/>
 								</option>
-								<option id="gnu.cpp.link.option.flags.2110488263" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-rpath=/home/ali/Install/rheolef-6.4/lib" valueType="string"/>
+								<option id="gnu.cpp.link.option.flags.2110488263" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-rpath=/home/ali/Install/rheolef-dev/lib" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.691160435" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

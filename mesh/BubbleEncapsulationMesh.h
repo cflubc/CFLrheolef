@@ -15,6 +15,7 @@
 #include <vector>
 #include <fstream>
 #include <stdexcept>
+#include <limits>
 
 #include "CFL.h"
 #include "ConfigXML.h"
@@ -23,6 +24,7 @@
 #include "bamgcad.h"
 #include "ParametricCurves.h"
 #include "CFLParametricMeshGen.h"
+#include "RheolefDomainFile.h"
 
 
 class BubbleEncapsulationMesh
@@ -34,16 +36,17 @@ class BubbleEncapsulationMesh
 public:
 
 	BubbleEncapsulationMesh( XMLConfigFile const& conf, string const& base_name ):
+		use_fineMesh_on_wall( conf.get_if_path_exist({"use_fineMesh_on_wall"},string("no"))=="yes" ),
+		gen_droplet_mesh( type_str(conf)[1]==string("droplet")  ),
+		h_wallMesh( use_fineMesh_on_wall ? conf("hwall",h_wallMesh) : std::numeric_limits<double>::quiet_NaN() ),
 		rx( .5*conf("bubble_length",rx) ),
 		ry( .5*conf("bubble_width",ry) ),
 		 D( .5*conf("channel_width",D) ),
 		 L( .5*conf("channel_length",L) ),
-		use_fineMesh_on_wall( conf.get_if_path_exist({"use_fineMesh_on_wall"},string("no"))==string("yes") ),
-		h_wallMesh( use_fineMesh_on_wall ? conf("hwall",h_wallMesh) : 1e7 ),
 		shape(rx,ry),
 		curve_integrator( conf.child("ParametricCurve_mesh") )
 	{
-		string const type( conf("type") );
+		string const type = type_str(conf)[0];
 		if( type=="symx" )
 			symx(base_name);
 		else if( type=="symxy" )
@@ -65,7 +68,9 @@ public:
 
 		size_t const nbubble = Xbub.size();
 		size_t const nwall = Xwal.size();
-		size_t const ncorner_vertices = 5;
+		size_t  ncorner_vertices = 5;
+		if(gen_droplet_mesh)
+			++ncorner_vertices;
 		size_t const nvertices = nbubble+nwall+ncorner_vertices;
 
 		bamgcad bamg( nvertices, base_name );
@@ -76,26 +81,44 @@ public:
 		bamg.print(-L,  " 0", " 4\n");
 		bamg.print(-rx, " 0", " 4\n");
 		bamg.print_points(Xbub,Ybub," 5\n");
+		if(gen_droplet_mesh)
+			bamg.print("0 0 1\n");
 
-		bamg.print_edges_header();
-		bamg.print("1 2 1\n");
-		size_t
-		iedge = bamg.print_ordered_edges(2,nwall+1," 2\n");
-		iedge = bamg.print_edge(iedge," 3\n");
-		iedge = bamg.print_edge(iedge," 4\n");
-		iedge = bamg.print_ordered_edges(iedge,nbubble," 5\n");
-		bamg.print(iedge," 1 5\n");
+
+		size_t nedges = nvertices;
+		if( gen_droplet_mesh )
+			++nedges;
+		bamg.print_edges_header(nedges);
+		size_t ipoint = 1;
+		ipoint = bamg.print_edge(ipoint," 1\n");
+		ipoint = bamg.print_ordered_edges(ipoint,nwall+1," 2\n");
+		ipoint = bamg.print_edge(ipoint," 3\n");
+		ipoint = bamg.print_edge(ipoint," 4\n");
+		size_t const bub_head_point_id = ipoint;
+		ipoint = bamg.print_ordered_edges(ipoint,nbubble," 5\n");
+		bamg.print(ipoint," 1 5\n");
+
+		if( gen_droplet_mesh )
+		{
+			size_t const last_bub_edge = ipoint;
+			++ipoint;
+			bamg.print(ipoint," 1 1\n");
+			bamg.print(bub_head_point_id," ",ipoint," 4\n");
+
+			bamg.print_subdomain_header(2);
+			bamg.print("2 ",last_bub_edge," -1 201\n");
+			bamg.print("2 ",last_bub_edge,"  1 202\n");
+		}
 		bamg.close_file();
 
-		std::ofstream fdmn( domain_filename(base_name).c_str() );
-		fdmn << "EdgeDomainNames\n"
-				"5\n"
-				"right_top\n"
-				"top\n"
-				"left\n"
-				"bottom\n"
-				"bubble\n";
-		fdmn.close();
+		RheolefDomainFile fdmn(base_name);
+		if( gen_droplet_mesh ){
+			fdmn.print_edge_domains({"right","top","left","bottom","droplet_boundary"});
+			fdmn.print_region_domains({"droplet","fluid"});
+		}
+		else
+			fdmn.print_edge_domains({"right","top","left","bottom","bubble"});
+		fdmn.close_file();
 	}
 
 	void symx( string const& base_name )
@@ -115,10 +138,10 @@ public:
 		size_t const nvertices = nbubble+ncorner_vertices+2*nwall;
 
 		bamgcad bamg( nvertices, base_name );
-		bamg.print("0 "  , ry  ," 1\n");
-		bamg.print("0 "  , D   ," 2\n");
+		bamg.print("0 "  , ry ," 1\n");
+		bamg.print("0 "  , D  ," 2\n");
 		bamg.print_points(Xwal,Ywal," 2\n");
-		bamg.print(-L," ", D   ," 2\n");
+		bamg.print(-L," ", D  ," 2\n");
 
 		for(auto& y:Ywal)
 			y*=-1;
@@ -130,36 +153,56 @@ public:
 		bamg.print("0 "  ,-ry  ," 5\n");
 		bamg.print_points(Xbub,Ybub," 6\n");
 
-		bamg.print_edges_header();
+		size_t nedges = nvertices;
+		if( gen_droplet_mesh )
+			++nedges;
+		bamg.print_edges_header(nedges);
 		bamg.print("1 2 1\n");
 		size_t iedge = bamg.print_ordered_edges(2,nwall+1," 2\n");
 		iedge = bamg.print_edge(iedge," 3\n");
 		iedge = bamg.print_ordered_edges(iedge,nwall+1," 4\n");
-		iedge = bamg.print_edge(iedge," 5\n");
-		iedge = bamg.print_ordered_edges(iedge,nbubble," 6\n");
-		bamg.print(iedge," 1 6\n");
+		iedge = bamg.print_edge(iedge," 1\n");
+		iedge = bamg.print_ordered_edges(iedge,nbubble," 5\n");
+		bamg.print(iedge," 1 5\n");
+
+		if( gen_droplet_mesh )
+		{
+			size_t const bub_bottom_point_id = ncorner_vertices+2*nwall;
+			bamg.print(bub_bottom_point_id," 1 1\n");
+			size_t const& direction_edge_id = iedge;
+			bamg.print_subdomain_header(2);
+			bamg.print("2 ",direction_edge_id," -1 201\n");
+			bamg.print("2 ",direction_edge_id,"  1 202\n");
+
+		}
 		bamg.close_file();
 
-		std::ofstream fdmn( domain_filename(base_name).c_str() );
-		fdmn << "EdgeDomainNames\n"
-				"6\n"
-				"right_top\n"
-				"top\n"
-				"left\n"
-				"bottom\n"
-				"right_bottom\n"
-				"bubble\n";
-		fdmn.close();
+		RheolefDomainFile fdmn(base_name);
+		if( gen_droplet_mesh ){
+			fdmn.print_edge_domains({"right","top","left","bottom","droplet_boundary"});
+			fdmn.print_region_domains({"droplet","fluid"});
+		}
+		else
+			fdmn.print_edge_domains({"right","top","left","bottom","bubble"});
+		fdmn.close_file();
 	}
 
 private:
 
+	std::vector<string> type_str( XMLConfigFile const& conf ){
+		std::vector<string> v;
+		conf("type",&v);
+		return v;
+	}
+
+	bool const use_fineMesh_on_wall;
+	bool const gen_droplet_mesh;
+
+	double const h_wallMesh;
 	double const rx;
 	double const ry;
 	double const  D;
 	double const  L;
-	bool const use_fineMesh_on_wall;
-	double const h_wallMesh;
 
 	shape_ellipse shape;
 	CFLCurveIntegrator curve_integrator;

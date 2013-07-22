@@ -48,7 +48,13 @@ public:
 	}
 
 	void print_edges_header()
-	{println_args(file,"\nEdges ",nvertices);}
+	{print_edges_header(nvertices);}
+
+	void print_edges_header( size_t const nedges )
+	{println_args(file,"\nEdges ",nedges);}
+
+	void print_subdomain_header( size_t const ndom )
+	{println_args(file,"\nSubDomain ",ndom);}
 
 	size_t print_ordered_edges( size_t const& beg,
 			                  size_t const& nedges,

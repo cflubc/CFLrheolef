@@ -66,8 +66,8 @@ XMLConfigFile::path_string( xmlpath path )
 {
 	std::string str;
 	for(const auto& s:path){
-		str += "/";
 		str += s;
+		str += "/";
 	}
 	return str;
 }

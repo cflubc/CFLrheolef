@@ -9,7 +9,10 @@
     </FEfields>
 
     <AugmentedLagrangian>
-        <Bn>1</Bn>
+        <Bn>
+           <domain_names>drop fluid</domain_names>
+           <values>0 1</values>
+        </Bn>
         <a>20</a>
     </AugmentedLagrangian>
 

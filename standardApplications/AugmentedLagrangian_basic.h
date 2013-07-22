@@ -29,9 +29,11 @@
 #include "OutputFormatting.h"
 #include "TensorFieldIterator.h"
 #include "DiffusionForms.h"
+#include "ParameterOnFieldDOFs.h"
 
 
-template< typename VelocityMinimizationSolver >
+
+template< typename VelocityMinimizationSolver, typename BinghamParam = ParameterOnFieldDOFs::Unique >
 class AugmentedLagrangian_basic
 {
 	typedef rheolef::field field;
@@ -46,17 +48,17 @@ public:
 	AugmentedLagrangian_basic( const XMLConfigFile& conf,
 							   FieldsPool& fields,
 							   DirichletBC& BC ):
-		XML_INIT_VAR(conf,Bn,"Bn"),
+		Xh(fields.get_geo(), derivative_approx(fields.Uh().get_approx()), "tensor"),
 		XML_INIT_VAR(conf,a,"a"),
+		Bn(Xh[0],conf.child("Bn")),
 		alpha( a/(1.+a) ),
 		velocity_minimizer(conf,fields,BC,a),
-		Xh(fields.get_geo(), derivative_approx(fields.Uh().get_approx()), "tensor"),
 		Tau(Xh, 0.),
 		Gam(Xh, -1000.),
 		Gamdot(Xh, 0.),
 		TminusaG(Xh, 0.),
 		vel_rhs(fields.Uspace(), 0.),
-		vel_rhs_const(vel_rhs.get_space(), 0.),
+		vel_rhs_const(fields.Uspace(), 0.),
 		Gamdot_server(fields.Uh()),
 		div_ThUh( -.5*trans(Gamdot_server.set_desired_strainrate_space(Xh)) ),
 		deltaTau(Tau),
@@ -98,7 +100,7 @@ public:
 	field adapt_criteria() const {
 		// just scalar version of Th
 		space T0h( Xh.get_geo(), Xh.get_approx() );
-		return interpolate( T0h, sqrt(.5*norm2(Gamdot)+Bn*std::sqrt(.5)*norm(Gamdot)) );
+		return interpolate( T0h, sqrt(.5*norm2(Gamdot)+Bn.parameter()*sqrt(.5)*norm(Gamdot)) );
 	}
 
 	void write_results() const {
@@ -175,12 +177,12 @@ public:
 	{return Gam;}
 
 private:
-	Float const Bn;      ///< Bingham number
+	space Xh;    ///< tensor space of Lagrange multipliers
 	Float const a;       ///< Augmentation parameter
+	BinghamParam Bn;      ///< Bingham number
 	Float const alpha;   ///< helper const coeficient
 
 	VelocityMinimizationSolver velocity_minimizer;
-	space Xh;    ///< tensor space of Lagrange multipliers
 	field Tau;   ///< Stress Lagrange multiplier
 	field Gam;   ///< Strain rate Lagrange multiplier
 	field Gamdot;  ///< Strain rate of velocity
@@ -215,15 +217,16 @@ private:
 
 
 
-template< typename VelocityMinimizationSolver>
+template< typename VelocityMinimizationSolver, typename BinghamParam >
 template< typename LoopManipulator >
-void AugmentedLagrangian_basic<VelocityMinimizationSolver>::
+void AugmentedLagrangian_basic<VelocityMinimizationSolver,BinghamParam>::
 update_lagrangeMultipliers( LoopManipulator& obj )
 {
 	Gamdot_server.get(Gamdot);
 
+	Bn.begin();
 	Tensor_citr Gdot(Gamdot);
-	for( Tensor_itr T(Tau), TmG(TminusaG); !T.end_reached(); ++T, ++TmG, ++Gdot, ++obj )
+	for( Tensor_itr T(Tau), TmG(TminusaG); !T.end_reached(); ++T, ++TmG, ++Gdot, ++Bn, ++obj )
 	{
 		Tensor TaGdot;
 		Float TaGdot_norm(0.);
@@ -233,7 +236,7 @@ update_lagrangeMultipliers( LoopManipulator& obj )
 		}
 		TaGdot_norm = std::sqrt( .5*TaGdot_norm );
 
-		const Float resi = TaGdot_norm-Bn;
+		const Float resi = TaGdot_norm-Bn.val_on_current_dof();
 		if( 0.<resi )
 		{
 			const Float resi_frac( resi/TaGdot_norm );

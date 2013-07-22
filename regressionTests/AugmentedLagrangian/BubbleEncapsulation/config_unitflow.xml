@@ -55,17 +55,19 @@
 
    <Mesh>
       <name>bubble</name>
-      <type>symx</type>
+      <type>symxy droplet</type>
       <bubble_length>.8</bubble_length>
       <bubble_width>.1</bubble_width>
       <channel_width>1</channel_width>
       <channel_length>2</channel_length>
+      <use_fineMesh_on_wall>es</use_fineMesh_on_wall>
+      <hwall>.03</hwall>
       
       <ParametricCurve_mesh>
-         <max_dTheta>.1</max_dTheta>
-         <max_ds>.1</max_ds>
+         <max_dTheta>.8</max_dTheta>
+         <max_ds>.3</max_ds>
       </ParametricCurve_mesh>
-      <command_line_args>-hmax .1</command_line_args>
+      <command_line_args>-hmax .4</command_line_args>
       <plot_mesh_args>no</plot_mesh_args>
    </Mesh>
 

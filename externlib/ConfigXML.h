@@ -101,7 +101,7 @@ XMLConfigFile::operator()( xmlpath path ) const
 inline
 XMLConfigFile
 XMLConfigFile::child( xmlpath path ) const
-{ return XMLConfigFile( find_node(path), path_string(path) ); }
+{ return XMLConfigFile( find_node(path), root_path+path_string(path) ); }
 
 
 template< typename T >

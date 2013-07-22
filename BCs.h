@@ -98,16 +98,14 @@ struct bubble_BC
 		Xh.block("top");
 		Xh.block("bottom");
 		Xh[1].block("left");
-		Xh[1].block("right_top");
-		Xh[1].block("right_bottom");
+		Xh[1].block("right");
 	}
 
 	void set_velocity_dirichlet( rheolef::field& Uh ) const {
 		Uh["top"] = 0.;
 		Uh["bottom"] = 0.;
 		Uh[1]["left"] = 0.;
-		Uh[1]["right_top"] = 0.;
-		Uh[1]["right_bottom"] = 0.;
+		Uh[1]["right"] = 0.;
 	}
 
 	bubble_BC( XMLConfigFile const& )
