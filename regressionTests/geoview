@@ -2,5 +2,7 @@
 
 for folder in $(ls | grep result)
 do
-	geo -noverbose $(ls $folder/*.geo*)
+        fgeo=$(ls $folder/*.geo*)
+        echo "geo $fgeo"
+	geo -noverbose "$fgeo"
 done

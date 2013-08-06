@@ -88,14 +88,14 @@ private:
 
 
 
-template< typename VelocityMinimizationSolver, typename VelocityRHSManipulator >
+template< typename BasicAugmentedLagrangian, typename VelocityRHSManipulator >
 class AugmentedLagrangianUnitFlow
 {
 	typedef rheolef::field field;
 	typedef rheolef::Float Float;
 	typedef std::size_t size_t;
 
-	enum : bool { useLinearOptimization =  VelocityMinimizationSolver::isLinear &&
+	enum : bool { useLinearOptimization =  BasicAugmentedLagrangian::isVelocityOptimizerLinear &&
                                                VelocityRHSManipulator::isLinear  };
 	typedef unitflow_iterator<useLinearOptimization> UnitFlowIterator;
 	friend UnitFlowIterator;
@@ -108,7 +108,7 @@ public:
 								 DirichletBC BC ):
 		rhs_control(conf.child("unitflow_rhs_controller"),fields.Uspace()),
 		flowrate(conf("flowrate_calculation_edge_name"),fields.Uh()),
-		AL(conf.child("AugmentedLagrangian"),fields,BC),
+		AL(conf,fields,BC),
 		report_header_reprint_frequency( conf.get_if_path_exist({"report_header_reprint_frequency"},30) ),
 
 		LowResolution_conf( conf.child("LowResolution_step") ),
@@ -242,7 +242,7 @@ private:
 
 	VelocityRHSManipulator rhs_control;
 	BorderFluxCalculator const flowrate;
-	AugmentedLagrangian_basic<VelocityMinimizationSolver> AL;
+	BasicAugmentedLagrangian AL;
 	size_t const report_header_reprint_frequency;
 
 	XMLConfigFile const LowResolution_conf;

@@ -24,6 +24,7 @@ typedef const char* cstr;
 
 constexpr cstr CFL_FieldsPool_Module = "FEfields";
 constexpr cstr CFL_SaveFolder_BaseName = "result";
+constexpr cstr CFL_Version = "1.1";
 
 
 inline bool

@@ -14,7 +14,7 @@
 #include "standard_augmentedLagrangian_algo.h"
 
 
-template< typename VelocityMinimizationSolver >
+template< typename BasicAugmentedLagrangian >
 class StandardAugmentedLagrangianSolver
 {
 	typedef rheolef::field field;
@@ -25,7 +25,7 @@ public:
 	StandardAugmentedLagrangianSolver( const XMLConfigFile& conf,
 								 FieldsPool& fields,
 								 DirichletBC BC ):
-		AL(conf.child("AugmentedLagrangian"),fields,BC),
+		AL(conf,fields,BC),
 		algo(conf)
 	{}
 
@@ -44,7 +44,10 @@ public:
 	field const& get_strainRate_lagrangeMultiplier() const
 	{return AL.get_strainRate_lagrangeMultiplier();}
 
-	AugmentedLagrangian_basic<VelocityMinimizationSolver> AL;
+	rheolef::space const& get_lagrangeMultipliers_space() const
+	{return AL.get_lagrangeMultipliers_space();}
+
+	BasicAugmentedLagrangian AL;
 	standard_augmentedLagrangian_algo algo;
 };
 

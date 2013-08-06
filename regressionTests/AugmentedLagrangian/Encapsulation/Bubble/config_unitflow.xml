@@ -7,23 +7,23 @@
         <vspace>P2</vspace>
     </FEfields> 
 
-    <AugmentedLagrangian>
-        <Bn>3</Bn>
-        <a>10</a>      
-    </AugmentedLagrangian>
+    <PhysicalParameters>
+        <Bn>2</Bn>
+        <Viscosity></Viscosity>
+    </PhysicalParameters>
+
+   <Augmentation_coef>10</Augmentation_coef>
 
    <unitflow_rhs_controller>
        <edge_name>left</edge_name>
        <normal_stress_value>1</normal_stress_value>
-       <!--bodyforce_vector>1 0 0</bodyforce_vector-->
    </unitflow_rhs_controller>
-
 
    <flowrate_calculation_edge_name>left</flowrate_calculation_edge_name>
    <report_header_reprint_frequency>30</report_header_reprint_frequency>
 
    <LowResolution_step>
-      <max_iteration>600</max_iteration>
+      <max_iteration>500</max_iteration>
       <reports_frequency>50</reports_frequency>   
 
       <SteadyAnalyser>
@@ -48,36 +48,36 @@
       <AugmentedLag>
          <reports_frequency>50</reports_frequency>
          <convergence_limit>1E-5</convergence_limit>
-         <max_iteration>1000</max_iteration>
-         <min_iteration>500</min_iteration>
+         <max_iteration>400</max_iteration>
+         <min_iteration>400</min_iteration>
       </AugmentedLag>
    </HighResolution_step>
 
    <Mesh>
       <name>bubble</name>
-      <type>symxy droplet</type>
+      <type>symx bubble</type>
       <bubble_length>.8</bubble_length>
       <bubble_width>.1</bubble_width>
       <channel_width>1</channel_width>
       <channel_length>2</channel_length>
-      <use_fineMesh_on_wall>es</use_fineMesh_on_wall>
+      <use_fineMesh_on_wall>y es</use_fineMesh_on_wall>
       <hwall>.03</hwall>
       
       <ParametricCurve_mesh>
-         <max_dTheta>.8</max_dTheta>
-         <max_ds>.3</max_ds>
+         <max_dTheta>.1</max_dTheta>
+         <max_ds>.1</max_ds>
       </ParametricCurve_mesh>
-      <command_line_args>-hmax .4</command_line_args>
+      <command_line_args>-hmax .1</command_line_args>
       <plot_mesh_args>no</plot_mesh_args>
    </Mesh>
 
     <Adaptation>
-        <cycles>4</cycles>
+        <cycles>2</cycles>
         <hmin>.001</hmin>
         <hmax>.1</hmax>
         <hcoef>2 1</hcoef>
         <ratio>1</ratio>
-        <err>2E-4</err>
+        <err>4E-5</err>
         <errg>1e-3</errg>
         <additional>-AbsError</additional>
         <n_vertices_max>20000</n_vertices_max>

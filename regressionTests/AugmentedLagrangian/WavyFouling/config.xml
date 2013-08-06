@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <data>
-    <problem>WavyChannelFouling</problem>
+   <problem>WavyFouling</problem>
 
-    <FEfields>
-        <pspace>P1</pspace>
-        <vspace>P2</vspace>
-        <BCtype>symmetry</BCtype>
-    </FEfields>
+   <FEfields>
+       <pspace>P1</pspace>
+       <vspace>P2</vspace>
+       <BCtype>symmetry</BCtype>
+   </FEfields>
 
-    <AugmentedLagrangian>
-        <Bn>
-           <domain_names>drop fluid</domain_names>
-           <values>0 1</values>
-        </Bn>
-        <a>20</a>
-    </AugmentedLagrangian>
+   <PhysicalParameters>
+       <Bn> 2</Bn>
+       <Viscosity></Viscosity>
+   </PhysicalParameters>
+
+   <Augmentation_coef>10</Augmentation_coef>
 
    <unitflow_rhs_controller>
 	   <bodyforce_vector>1 0 0</bodyforce_vector>
@@ -24,7 +23,7 @@
    <report_header_reprint_frequency>30</report_header_reprint_frequency>
 
    <LowResolution_step>
-      <max_iteration>300</max_iteration>
+      <max_iteration>500</max_iteration>
       <reports_frequency>50</reports_frequency>   
 
       <SteadyAnalyser>
@@ -58,6 +57,8 @@
       <type>symxy</type>
       <H>1</H>
       <L>4</L>
+      <Inlet>3</Inlet>
+
       <ParametricCurve_mesh>
          <max_dTheta>.2</max_dTheta>
          <max_ds>.2</max_ds>
@@ -68,13 +69,13 @@
 
     <Adaptation>
         <cycles>4</cycles>
-        <hmin>.0004</hmin>
+        <hmin>.002</hmin>
         <hmax>.15</hmax>
         <hcoef>1</hcoef>
         <ratio>1</ratio>
-        <err>2e-4</err>
+        <err>5e-5</err>
         <errg>1e-1</errg>
         <additional>-AbsError</additional>
-        <n_vertices_max>3000</n_vertices_max>
+        <n_vertices_max>10000</n_vertices_max>
     </Adaptation>    
 </data>

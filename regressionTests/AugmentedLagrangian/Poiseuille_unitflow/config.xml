@@ -2,16 +2,18 @@
 <data>
     <problem>AugLag_ChannelUnitFlow</problem>
 
-    <FEfields>
-        <pspace>P1</pspace>
-        <vspace>P2</vspace>
-        <BCtype>symmetry</BCtype>
-    </FEfields> 
+   <FEfields>
+       <pspace>P1</pspace>
+       <vspace>P2</vspace>
+       <BCtype>symmetry</BCtype>
+   </FEfields> 
 
-    <AugmentedLagrangian>
-        <Bn>4.8</Bn>
-        <a>10</a>
-    </AugmentedLagrangian>
+   <PhysicalParameters>
+       <Bn>4.8</Bn>
+       <Viscosity></Viscosity>
+   </PhysicalParameters>
+
+   <Augmentation_coef>10</Augmentation_coef>
 
    <unitflow_rhs_controller>
 	   <bodyforce_vector>1 0 0</bodyforce_vector>

@@ -8,11 +8,12 @@
         <BCtype>full</BCtype>
     </FEfields>    
 
-    <AugmentedLagrangian>
+    <PhysicalParameters>
         <Bn>4.8</Bn>
-        <a>10</a>
-    </AugmentedLagrangian>
+        <Viscosity></Viscosity>
+    </PhysicalParameters>
 
+   <Augmentation_coef>10</Augmentation_coef>
    <convergence_limit>5E-6</convergence_limit>
    <max_iteration>800</max_iteration>
    <reports_frequency>50</reports_frequency>
@@ -42,6 +43,6 @@
         <err>1e-3</err>
         <errg>1e-3</errg>
         <additional>-AbsError</additional>
-        <n_vertices_max>50000</n_vertices_max>
+        <n_vertices_max>20000</n_vertices_max>
     </Adaptation>    
 </data>

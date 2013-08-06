@@ -7,24 +7,25 @@
         <vspace>P2</vspace>
     </FEfields>
 
-    <AugmentedLagrangian>
-        <Bn>1</Bn>
-        <a>10</a>
-    </AugmentedLagrangian>
+    <PhysicalParameters>
+        <Bn>2</Bn>
+        <Viscosity></Viscosity>
+    </PhysicalParameters>
 
+   <Augmentation_coef>10</Augmentation_coef>
    <convergence_limit>2e-6</convergence_limit>
-   <max_iteration>600</max_iteration>
+   <max_iteration>500</max_iteration>
    <reports_frequency>50</reports_frequency>
    <report_header_reprint_frequency>30</report_header_reprint_frequency>
 
    <source_term>
-       <normal_stress_value>9</normal_stress_value>
+       <normal_stress_value>6</normal_stress_value>
        <edge_name>left</edge_name>
    </source_term>
 
    <Mesh>
-      <name>bubb</name>
-      <type>symx</type>
+      <name>encap</name>
+      <type>symx bubble</type>
       <bubble_length>.8</bubble_length>
       <bubble_width>.1</bubble_width>
       <channel_width>1</channel_width>

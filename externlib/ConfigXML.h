@@ -27,11 +27,11 @@ class XMLConfigFile
     Nodeptr rootnode;
     TiXmlDocument doc;
 
-    bool node_accessible( xmlpath path, Nodeptr& result ) const;
     cstr get_txt( xmlpath path ) const;
     static std::string path_string( xmlpath path );
 
 public:
+    bool node_accessible( xmlpath path, Nodeptr& result ) const;
     Nodeptr find_node( xmlpath path ) const;
 
     XMLConfigFile( Nodeptr node, std::string const& parent_path ):
@@ -84,6 +84,10 @@ public:
 
     template< typename T >
     void set_if_path_exist( cstr one_path, T *const val ) const;
+
+    template< typename T >
+    T get_if_path_exist( cstr one_path, T default_val ) const;
+
 };
 
 
@@ -201,6 +205,12 @@ template< typename T>
 inline T
 XMLConfigFile::operator()( cstr one_path, T val ) const
 {return operator()(xmlpath{one_path},val);}
+
+
+template< typename T >
+inline T
+XMLConfigFile::get_if_path_exist( cstr one_path, T default_val ) const
+{return get_if_path_exist(xmlpath{one_path},default_val);}
 
 
 inline

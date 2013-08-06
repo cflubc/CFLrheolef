@@ -14,7 +14,9 @@
 #include "StandardAugmentedLagrangianSolver.h"
 
 
-template< typename VelocityMinimizationSolver, typename VelocityRHSManipulator >
+template<
+		typename BasicAugmentedLagrangian,
+		typename VelocityRHSManipulator >
 class StandardAugmentedLagrangian
 {
 	typedef rheolef::field field;
@@ -38,7 +40,7 @@ public:
 
 private:
 	VelocityRHSManipulator rhs_manipulator;
-	StandardAugmentedLagrangianSolver<VelocityMinimizationSolver> sAL;
+	StandardAugmentedLagrangianSolver<BasicAugmentedLagrangian> sAL;
 };
 
 

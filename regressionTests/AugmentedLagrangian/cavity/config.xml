@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <data>
-    <problem>AugLag_SteadyCavity</problem>
+   <problem>AugLag_SteadyCavity</problem>
 
-    <FEfields>
-        <pspace>P1</pspace>
-        <vspace>P2</vspace>
-    </FEfields>
+   <FEfields>
+       <pspace>P1</pspace>
+       <vspace>P2</vspace>
+   </FEfields>
 
-    <AugmentedLagrangian>
-        <Bn>10</Bn>
-        <a>10</a>             
-    </AugmentedLagrangian>
+   <PhysicalParameters>
+       <Bn>10</Bn>
+       <Viscosity></Viscosity>
+   </PhysicalParameters>
 
+   <source_term></source_term>
+   <Augmentation_coef>10</Augmentation_coef>
    <convergence_limit>1E-5</convergence_limit>
-   <max_iteration>1000</max_iteration>
+   <max_iteration>2000</max_iteration>
    <reports_frequency>50</reports_frequency>    
 
    <Mesh>
@@ -21,20 +23,18 @@
       <type>full</type>
       <width>1</width>
       <length>1</length>
-      <command_line_args>-hmax .07</command_line_args>
+      <command_line_args>-hmax .03</command_line_args>
       <plot_mesh_args>no</plot_mesh_args>
    </Mesh>
 
     <Adaptation>
         <cycles>3</cycles>
-        <n_vertices_max>10000</n_vertices_max>
-        <hmin>.005</hmin>
+        <n_vertices_max>20000</n_vertices_max>
+        <hmin>.0005</hmin>
         <hmax>.1</hmax>
         <hcoef>6</hcoef>
         <ratio>1</ratio>
         <err>1E-3</err>
         <additional>-RelError</additional>
     </Adaptation>
- 
-    <source_term></source_term>
 </data>

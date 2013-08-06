@@ -19,6 +19,8 @@
 #include <cassert>
 #include <string>
 #include <iostream>
+#include <vector>
+#include <limits>
 
 #include "rheolef.h"
 #include "rheolef/diststream.h"
@@ -31,9 +33,61 @@
 #include "DiffusionForms.h"
 #include "ParameterOnFieldDOFs.h"
 
+namespace AugmentedLagrangian_param {
+
+using rheolef::Float;
+using rheolef::field;
+
+template< typename Param, typename Initializer >
+struct AL_param
+{
+	typedef Param param_t;
+	typedef Initializer init;
+};
+
+template< typename Initialzer >
+using unique = AL_param<const ParameterOnDOFs::ConstUnique,Initialzer>;
+
+template< typename Initializer >
+using non_unique = AL_param<const ParameterOnDOFs::ConstNonUnique,Initializer>;
 
 
-template< typename VelocityMinimizationSolver, typename BinghamParam = ParameterOnFieldDOFs::Unique >
+struct alpha_unique_init
+{
+	alpha_unique_init( Float const& x ): a(x) {}
+	Float get( XMLConfigFile const& conf ) const
+	{return a/(a+1.);}
+	Float const a;
+};
+
+struct alpha_multiRegion_init
+{
+	alpha_multiRegion_init( Float const& x ): a(x) {}
+	void get( field& f, XMLConfigFile const& conf ) const
+	{
+		typedef ParameterOnDOFs::multiRegion_field_initializer I;
+		I::names_t names;
+		I::vals_t viscosities;
+		I::get_domains_and_values(conf,names,viscosities);
+		for(auto& v : viscosities)
+			v = a/(v+a);
+		I::set_field_regions_values(f,names,viscosities);
+	}
+	Float const a;
+};
+
+
+typedef unique<alpha_unique_init> alpha_unique;
+typedef unique<ParameterOnDOFs::unique_default_initializer> Bingham_unique;
+
+typedef non_unique<alpha_multiRegion_init> alpha_multiRegion;
+typedef non_unique<ParameterOnDOFs::multiRegion_field_initializer> Bingham_multiRegion;
+
+} // namespace AugmentedLagrangian_param
+
+template< typename VelocityMinimizationSolver,
+          typename BinghamParam,
+          typename alphaParam >
 class AugmentedLagrangian_basic
 {
 	typedef rheolef::field field;
@@ -44,14 +98,17 @@ class AugmentedLagrangian_basic
 	typedef Tensor_itr::tensor                         Tensor;
 
 public:
+	enum : bool { isVelocityOptimizerLinear = VelocityMinimizationSolver::isLinear };
+
 	template< typename FieldsPool, typename DirichletBC >
 	AugmentedLagrangian_basic( const XMLConfigFile& conf,
 							   FieldsPool& fields,
 							   DirichletBC& BC ):
 		Xh(fields.get_geo(), derivative_approx(fields.Uh().get_approx()), "tensor"),
-		XML_INIT_VAR(conf,a,"a"),
-		Bn(Xh[0],conf.child("Bn")),
-		alpha( a/(1.+a) ),
+		XML_INIT_VAR(conf,a,"Augmentation_coef"),
+		Bn( Xh[0], conf.child({"PhysicalParameters","Bn"}), typename BinghamParam::init() ),
+		alpha( Xh[0], conf.child({"PhysicalParameters","Viscosity"}), typename alphaParam::init(a) ),
+//		alpha( a/(1.+a) ),
 		velocity_minimizer(conf,fields,BC,a),
 		Tau(Xh, 0.),
 		Gam(Xh, -1000.),
@@ -65,8 +122,6 @@ public:
 		deltaU(fields.Uh())
 	{}
 
-	static constexpr bool isLinear()
-	{return VelocityMinimizationSolver::isLinear();}
 
 	void update_lagrangeMultipliers_fast(){
 		const manip_void x;
@@ -82,6 +137,27 @@ public:
 		deltaTau.save_field();
 		iterate();
 		return deltaTau.calculate_field_change()/a;
+	}
+
+	void iterate_ntimes( const int niter){
+		for( int i=0; i<niter; ++i )
+			iterate();
+	}
+
+	void iterate_ntimes_report_strain_velocity_change( const int niter, Float& dGam, Float& dU ){
+		iterate_ntimes(niter);
+		iterate_report_strain_velocity_change(dGam,dU);
+	}
+
+	void iterate_report_strain_velocity_change( Float& dT, Float& dU ){
+		save_strain_velocity();
+		iterate();
+		report_strain_velocity_change(dT,dU);
+	}
+
+	void iterate(){
+		update_lagrangeMultipliers_fast();
+		build_complete_rhs_and_solve_vel_minimization( augmented_lagraniang_rhs() );
 	}
 
 	void save_strain_velocity(){
@@ -100,14 +176,13 @@ public:
 	field adapt_criteria() const {
 		// just scalar version of Th
 		space T0h( Xh.get_geo(), Xh.get_approx() );
-		return interpolate( T0h, sqrt(.5*norm2(Gamdot)+Bn.parameter()*sqrt(.5)*norm(Gamdot)) );
+		return interpolate( T0h, sqrt(.5*norm2(Gamdot)+Bn.get_parameter()*sqrt(.5)*norm(Gamdot)) );
 	}
 
 	void write_results() const {
 		rheolef::odiststream o(Xh.get_geo().name(),"field");
 		write_fields(o);
 		o.close();
-
 //		o.open("U2StrainRate","m",false);
 //		o << rheolef::matlab;
 //		Gamdot_server.U2StrainRate.put(o);
@@ -133,34 +208,12 @@ public:
 		TminusaG = 0.;
 	}
 
-	void iterate_ntimes( const int niter ){
-		for( int i=0; i<niter; ++i ){
-			update_lagrangeMultipliers_fast();
-			build_complete_rhs_and_solve_vel_minimization( augmented_lagraniang_rhs() );
-		}
-	}
-
-	void iterate_ntimes_report_strain_velocity_change( const int niter, Float& dGam, Float& dU ){
-		iterate_ntimes(niter);
-		iterate_report_strain_velocity_change(dGam,dU);
-	}
-
-	void iterate_report_strain_velocity_change( Float& dT, Float& dU ){
-		save_strain_velocity();
-		iterate();
-		report_strain_velocity_change(dT,dU);
-	}
-
-	void iterate()
-	{iterate_ntimes(1);}
-
 	void build_complete_rhs_and_solve_vel_minimization( field const& f ){
 		vel_rhs = vel_rhs_const + f;
 		solve_vel_minization();
 	}
 
 	void solve_vel_minization() const {
-//		velocity_minimizer.solve(vel_rhs);
 		solve_vel_minization(vel_rhs);
 	}
 
@@ -178,9 +231,10 @@ public:
 
 private:
 	space Xh;    ///< tensor space of Lagrange multipliers
-	Float const a;       ///< Augmentation parameter
-	BinghamParam Bn;      ///< Bingham number
-	Float const alpha;   ///< helper const coeficient
+	Float const a;       ///< Augmentation coef
+	typename BinghamParam::param_t Bn;
+	typename alphaParam::param_t alpha;
+//	Float const alpha;   ///< helper const coeficient
 
 	VelocityMinimizationSolver velocity_minimizer;
 	field Tau;   ///< Stress Lagrange multiplier
@@ -217,16 +271,17 @@ private:
 
 
 
-template< typename VelocityMinimizationSolver, typename BinghamParam >
+template< typename VelocityMinimizationSolver, typename BinghamParam, typename alphaParam >
 template< typename LoopManipulator >
-void AugmentedLagrangian_basic<VelocityMinimizationSolver,BinghamParam>::
+void AugmentedLagrangian_basic<VelocityMinimizationSolver,BinghamParam,alphaParam>::
 update_lagrangeMultipliers( LoopManipulator& obj )
 {
 	Gamdot_server.get(Gamdot);
 
-	Bn.begin();
+	auto B = Bn.begin_dof();
+	auto _alpha = alpha.begin_dof();
 	Tensor_citr Gdot(Gamdot);
-	for( Tensor_itr T(Tau), TmG(TminusaG); !T.end_reached(); ++T, ++TmG, ++Gdot, ++Bn, ++obj )
+	for( Tensor_itr T(Tau), TmG(TminusaG); !T.end_reached(); ++T, ++TmG, ++Gdot, ++B, ++_alpha, ++obj )
 	{
 		Tensor TaGdot;
 		Float TaGdot_norm(0.);
@@ -236,11 +291,11 @@ update_lagrangeMultipliers( LoopManipulator& obj )
 		}
 		TaGdot_norm = std::sqrt( .5*TaGdot_norm );
 
-		const Float resi = TaGdot_norm-Bn.val_on_current_dof();
+		const Float resi = TaGdot_norm-*B;
 		if( 0.<resi )
 		{
 			const Float resi_frac( resi/TaGdot_norm );
-			const Float coef = alpha*resi_frac;
+			const Float coef = (*_alpha)*resi_frac;
 			// update of Lagrange multipliers
 			for(int i=0; i<Tensor_itr::Ncomp; ++i){
 				T(i)   = TaGdot[i]*(1.-coef);

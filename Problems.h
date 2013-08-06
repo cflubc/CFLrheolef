@@ -25,17 +25,15 @@
 #include "FlowOnsetDetection.h"
 
 
-struct voidMesh {
-	voidMesh( XMLConfigFile const&, std::string const& ) {}
-};
-
 struct VoidRHS {
 	VoidRHS( XMLConfigFile const&, rheolef::space const& ) {}
 	void add_to_rhs( rheolef::field& ) const {}
 };
 
 typedef IncompLinearDiffusionStokesSolver<BlockSystem_abtb> StokesFlow;
-
+typedef AugmentedLagrangian_basic<StokesFlow,AugmentedLagrangian_param::Bingham_unique,AugmentedLagrangian_param::alpha_unique> ALbasic_unique_params;
+typedef AugmentedLagrangian_basic<StokesFlow,AugmentedLagrangian_param::Bingham_multiRegion,AugmentedLagrangian_param::alpha_unique> ALbasic_multiRegion_Bn;
+typedef AugmentedLagrangian_basic<StokesFlow,AugmentedLagrangian_param::Bingham_multiRegion,AugmentedLagrangian_param::alpha_multiRegion> ALbasic_multiRegion;
 
 struct Problem_NewtonianCavity
 {
@@ -46,18 +44,18 @@ struct Problem_NewtonianCavity
 	static constexpr cstr Name = "NewtonianCavity";
 };
 
-struct Problem_WavyChannelFouling
+struct Problem_WavyFouling
 {
-	typedef AugmentedLagrangianUnitFlow<StokesFlow,BodyForce> Application;
-	typedef channelBC  BC;
+	typedef AugmentedLagrangianUnitFlow<ALbasic_unique_params,BodyForce> Application;
+	typedef channelBC BC;
 	typedef FlowFields FieldsPool;
 	typedef WavyChannelMesh Mesh;
-	static constexpr cstr Name = "WavyChannelFouling";
+	static constexpr cstr Name = "WavyFouling";
 };
 
 struct Problem_AugLag_ChannelUnitFlow
 {
-	typedef AugmentedLagrangianUnitFlow<StokesFlow,BodyForce> Application;
+	typedef AugmentedLagrangianUnitFlow<ALbasic_unique_params,BodyForce> Application;
 	typedef channelBC  BC;
 	typedef FlowFields FieldsPool;
 	typedef ChannelMesh Mesh;
@@ -66,7 +64,7 @@ struct Problem_AugLag_ChannelUnitFlow
 
 struct Problem_AugLag_SteadyPoiseuille
 {
-	typedef StandardAugmentedLagrangian<StokesFlow,BodyForce> Application;
+	typedef StandardAugmentedLagrangian<ALbasic_unique_params,BodyForce> Application;
 	typedef channelBC  BC;
 	typedef FlowFields FieldsPool;
 	typedef ChannelMesh Mesh;
@@ -75,25 +73,34 @@ struct Problem_AugLag_SteadyPoiseuille
 
 struct Problem_AugLag_SteadyCavity
 {
-	typedef StandardAugmentedLagrangian<StokesFlow,VoidRHS> Application;
+	typedef StandardAugmentedLagrangian<ALbasic_unique_params,VoidRHS> Application;
 	typedef cavityBC BC;
 	typedef FlowFields FieldsPool;
 	typedef ChannelMesh Mesh;
 	static constexpr cstr Name = "AugLag_SteadyCavity";
 };
 
-struct Problem_AugLag_BubbleEncapsulation
+struct Problem_BubbleEncapsulation
 {
-	typedef AugmentedLagrangianUnitFlow<StokesFlow,NormalStressBC_RHS> Application;
+	typedef AugmentedLagrangianUnitFlow<ALbasic_unique_params,NormalStressBC_RHS> Application;
 	typedef bubble_BC  BC;
 	typedef FlowFields FieldsPool;
 	typedef BubbleEncapsulationMesh Mesh;
 	static constexpr cstr Name = "AugLag_BubbleEncapsulation";
 };
 
+struct Problem_DropletEncapsulation
+{
+	typedef AugmentedLagrangianUnitFlow<ALbasic_multiRegion,BodyForce> Application;
+	typedef bubble_BC BC;
+	typedef FlowFields FieldsPool;
+	typedef BubbleEncapsulationMesh Mesh;
+	static constexpr cstr Name = "AugLag_DropletEncapsulation";
+};
+
 struct Problem_MacroBubbleFlowOnset
 {
-	typedef FlowOnsetDetection<StokesFlow,BodyForce> Application;
+	typedef FlowOnsetDetection<ALbasic_unique_params,BodyForce> Application;
 	typedef bubble_BC  BC;
 	typedef FlowFields FieldsPool;
 	typedef BubbleEncapsulationMesh Mesh;
