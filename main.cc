@@ -13,7 +13,7 @@
 
 #include "CFL.h"
 #include "ConfigXML.h"
-#include "adaptationLoop.h"
+#include "ApplicationDriver.h"
 #include "adaptationCriterions.h"
 #include "TimeGauge.h"
 #include "Problems.h"
@@ -29,8 +29,7 @@ typedef Problem_BubbleEncapsulation   Problem;
 typedef Problem::BC  DirichletBoundaryConditions;
 typedef Problem::FieldsPool  FieldsPool;
 typedef Problem::Mesh  Mesh;
-//typedef Problem::Application  Application;
-typedef AdaptationLoop<Problem::Application,Problem::FieldsPool,Problem::BC>  Application;
+typedef AdaptiveDriver<Problem::Application,Problem::FieldsPool> Driver;
 
 
 /**/
@@ -58,25 +57,17 @@ int main(int argc, char** argv )
 
 	XMLConfigFile const meshxml = conf.child("Mesh");
 	std::string const base_name = meshxml("name");
-	std::string const geo_file = geo_filename(base_name);
 	if( generate_mesh )
 	{
 		Mesh create_meshcad( meshxml, base_name );
 		make_geo_from_bamgcad_and_dmn_file( base_name,meshxml("command_line_args") );
 	}
-	plot_mesh(meshxml, geo_file);
+	plot_mesh(meshxml, base_name);
 	if( exit_after_mesh_gen )
-		exit(0);
+		exit(EXIT_SUCCESS);
 
-	rheolef::geo omega(geo_file);
-	XMLConfigFile const FE( conf.child(CFL_FieldsPool_Module) );
-	DirichletBoundaryConditions BC(FE);
-	FieldsPool fields(FE,omega,BC);
-
-	CFL_mkresult_folder_and_cd_to_it(0);
-	Application app(conf,fields,BC);
-	app.run();
-
+	DirichletBoundaryConditions BC( conf.child(CFL_FieldsPool_Module) );
+	Driver::run(conf, base_name, BC);
 	timer.stop();
 
 	CFL_print_time_memory_useage(rheolef::dout,timer.get_time_passed());
