@@ -26,8 +26,8 @@
  */
 
 typedef Problem_BubbleEncapsulation   Problem;
-typedef Problem::BC  DirichletBoundaryConditions;
-typedef Problem::FieldsPool  FieldsPool;
+typedef Problem::BC DirichletBoundaryConditions;
+typedef Problem::FieldsPool FieldsPool;
 typedef Problem::Mesh  Mesh;
 typedef AdaptiveDriver<Problem::Application,Problem::FieldsPool> Driver;
 
@@ -79,15 +79,6 @@ int main(int argc, char** argv )
 }
 /**/
 
-template< typename Application >
-struct NonAdaptiveApplication
-{
-	template< typename Fields, typename BoundaryCondition >
-	void setup_and_run( const XMLConfigFile& conf, Fields& fields, BoundaryCondition& BC ){
-		Application app(conf,fields);
-		app.run();
-	}
-};
 
 //int main( ){
 //	rheolef::idiststream o("wav-1-crit","field");

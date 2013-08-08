@@ -8,7 +8,7 @@
     </FEfields>
 
     <PhysicalParameters>
-        <Bn>2</Bn>
+        <Bn>1</Bn>
         <Viscosity></Viscosity>
     </PhysicalParameters>
 
@@ -19,7 +19,7 @@
    <report_header_reprint_frequency>30</report_header_reprint_frequency>
 
    <source_term>
-       <normal_stress_value>6</normal_stress_value>
+       <normal_stress_value>3</normal_stress_value>
        <edge_name>left</edge_name>
    </source_term>
 

@@ -39,6 +39,8 @@ public:
 	template< typename UnitFlowApp >
 	static void iterate( UnitFlowApp *const app, rheolef::field const& dirichlet_rhs )
 	{app->nonlinear_uniflow_iteration(dirichlet_rhs);}
+
+	void finalize_iterations() const {}
 };
 
 template<>
@@ -50,8 +52,11 @@ class unitflow_iterator<true>
 public:
 	template< typename UnitFlowApp, typename FieldPool >
 	unitflow_iterator( UnitFlowApp *const app, FieldPool& fields ):
+		param(0.),
 		Uh( calc_normalrhs_flow_helper(app,fields) ),
-		normalrhs_Uh(fields.Uh()),
+		Ph(fields.Ph()),
+		normalrhs_Usolution(fields.Uh()),
+		normalrhs_Psolution(fields.Ph()),
 		normalrhs_flowrate( app->get_flowrate() )
 	{}
 
@@ -62,10 +67,13 @@ public:
 		auto& AL = app->AL;
 		AL.solve_vel_minization( AL.vel_rhs_const_part() );
 		Float const flowrate_discripency = predictor.get_target_val()-app->get_flowrate();
-		Float const param = flowrate_discripency/normalrhs_flowrate;
-		Uh += param*normalrhs_Uh;
+		param = flowrate_discripency/normalrhs_flowrate;
+		Uh += param*normalrhs_Usolution;
 		predictor.set_input(param);
 	}
+
+	void finalize_iterations()
+	{Ph += param*normalrhs_Psolution;}
 
 private:
 	template< typename UnitFlowApp, typename FieldPool >
@@ -80,8 +88,11 @@ private:
 		return fields.Uh();
 	}
 
+	Float param;
 	field& Uh;
-	field const normalrhs_Uh;
+	field& Ph;
+	field const normalrhs_Usolution;
+	field const normalrhs_Psolution;
 	Float const normalrhs_flowrate;
 };
 
@@ -155,6 +166,7 @@ public:
 			output.print_header_if_needed("\niteration","|Un+1-Un|L2","|Gamdot-Gam|L2","Parameter");
 			output.print(niter,Ures,Gamres,predictor.get_input());
 		}
+		unitflow.finalize_iterations();
 		residuals.save_to_file();
 		printf("\n>>> Unit flow low resolution stage finishde");
 		print_solution_convergence_message( niter<LR_max_iteration );

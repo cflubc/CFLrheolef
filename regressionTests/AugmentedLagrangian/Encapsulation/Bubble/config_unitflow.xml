@@ -8,7 +8,7 @@
     </FEfields> 
 
     <PhysicalParameters>
-        <Bn>2</Bn>
+        <Bn>29</Bn>
         <Viscosity></Viscosity>
     </PhysicalParameters>
 
@@ -72,12 +72,12 @@
    </Mesh>
 
     <Adaptation>
-        <cycles>2</cycles>
+        <cycles>3</cycles>
         <hmin>.001</hmin>
         <hmax>.1</hmax>
-        <hcoef>2 1</hcoef>
+        <hcoef>1</hcoef>
         <ratio>1</ratio>
-        <err>4E-5</err>
+        <err>1E-4</err>
         <errg>1e-3</errg>
         <additional>-AbsError</additional>
         <n_vertices_max>20000</n_vertices_max>
