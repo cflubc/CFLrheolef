@@ -8,6 +8,7 @@
 #ifndef CFLSECANTMETHOD_H_
 #define CFLSECANTMETHOD_H_
 
+#include <cstddef>
 #include <sstream>
 #include "rheolef.h"
 
@@ -16,55 +17,24 @@
 
 
 
-class CFLSecantMethod
+class CFLSecantMethod : public SecantMethod<rheolef::Float>
 {
 	typedef rheolef::Float Float;
 
 public:
 
 	CFLSecantMethod( XMLConfigFile const& conf ):
-		secant( conf.atoi("max_iter"),
-				conf.atof("tolerance"),
-				conf.atof("target"),
+		SecantMethod<Float>(
+				conf("max_iter",std::size_t()),
+				conf("tolerance",Float()),
+				conf("target",Float()),
 				x1(init_point_str(conf)),
 				f1(init_point_str(conf)),
-				conf.atof("next_input")
-			  )
+				conf("next_input",Float())
+			  	  	  	  )
 	{}
 
-	Float get_target_val() const
-	{return secant.get_target_val();}
-
-	void reset()
-	{secant.reset();}
-
-	void set_tolerance_and_Maxiteration( Float const& tol, size_t const n )
-	{secant.set_tolerance_and_Maxiteration(tol,n);}
-
-	size_t n_iterations_done() const
-	{return secant.n_iterations_done();}
-
-	bool not_converged_and_have_iterations_left() const
-	{return secant.not_converged_and_have_iterations_left();}
-
-	Float get_input() const
-	{return secant.get_input();}
-
-	void set_input( Float const& x )
-	{secant.set_input(x);}
-
-	Float predict_new_input( Float const& f2 )
-	{return secant.predict_new_input(f2);}
-
-	Float get_last_input_change() const
-	{return secant.get_last_input_change();}
-
-	Float difference_from_last_output( Float const& f ) const
-	{return secant.difference_from_last_output(f);}
-
 private:
-	SecantMethod<Float> secant;
-
 	static cstr init_point_str( XMLConfigFile const& cf )
 	{return cf("initial_point");}
 

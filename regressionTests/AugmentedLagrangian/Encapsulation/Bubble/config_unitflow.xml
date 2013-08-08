@@ -68,12 +68,12 @@
          <max_dTheta>.1</max_dTheta>
          <max_ds>.1</max_ds>
       </ParametricCurve_mesh>
-      <command_line_args>-hmax .1</command_line_args>
+      <command_line_args>-hmax .2</command_line_args>
       <plot_mesh_args>no</plot_mesh_args>
    </Mesh>
 
     <Adaptation>
-        <cycles>6</cycles>
+        <cycles>3</cycles>
         <hmin>.0005</hmin>
         <hmax>.1</hmax>
         <hcoef>2 1 .6</hcoef>

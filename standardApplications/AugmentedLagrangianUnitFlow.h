@@ -107,7 +107,7 @@ class AugmentedLagrangianUnitFlow
 	typedef std::size_t size_t;
 
 	enum : bool { useLinearOptimization =  BasicAugmentedLagrangian::isVelocityOptimizerLinear &&
-                                               VelocityRHSManipulator::isLinear  };
+                                             VelocityRHSManipulator::isLinear  };
 	typedef unitflow_iterator<useLinearOptimization> UnitFlowIterator;
 	friend UnitFlowIterator;
 

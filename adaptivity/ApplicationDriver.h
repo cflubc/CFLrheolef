@@ -56,7 +56,7 @@ struct AdaptiveDriver
 			}
 		}
 
-		// move files from top folder to corresponding resultx (x adapt number) folder
+		// move files from top folder to corresponding adaptaion folder
 		for(int i=1; i<=strategy.n_adapt; ++i){
 			std::stringstream ss;
 			print_args(ss,"mv ",base_name,"-",i,"* ",CFL_SaveFolder_BaseName,i);
