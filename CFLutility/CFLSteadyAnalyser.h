@@ -18,19 +18,15 @@
 #include "SequenceSteadyAnalyser.h"
 
 
-class CFLSteadyAnalyser
+class CFLSteadyAnalyser : public SequenceSteadyAnalyser<rheolef::Float>
 {
-	SequenceSteadyAnalyser<rheolef::Float> seq;
-
 public:
 
 	CFLSteadyAnalyser( XMLConfigFile const& conf ):
-		seq( conf.atoi("n_points_to_monitor"), conf.atof("normalized_deviation_limit") )
+		SequenceSteadyAnalyser<rheolef::Float>(
+				conf.atoi("n_points_to_monitor"),
+				conf.atof("normalized_deviation_limit") )
 	{}
-
-	template< typename Container >
-	bool sequence_steady_state_reached( Container const& C )
-	{return seq.sequence_steady_state_reached(C);}
 };
 
 #endif /* CFLSTEADYANALYSER_H_ */
