@@ -83,7 +83,7 @@ struct Problem_AugLag_SteadyCavity
 struct Problem_BubbleEncapsulation
 {
 	typedef AugmentedLagrangianUnitFlow<ALbasic_unique_params,NormalStressBC_RHS> Application;
-	typedef bubble_BC  BC;
+	typedef channelBC  BC;
 	typedef FlowFields FieldsPool;
 	typedef BubbleEncapsulationMesh Mesh;
 	static constexpr cstr Name = "AugLag_BubbleEncapsulation";
@@ -92,7 +92,7 @@ struct Problem_BubbleEncapsulation
 struct Problem_DropletEncapsulation
 {
 	typedef AugmentedLagrangianUnitFlow<ALbasic_multiRegion,BodyForce> Application;
-	typedef bubble_BC BC;
+	typedef channelBC BC;
 	typedef FlowFields FieldsPool;
 	typedef BubbleEncapsulationMesh Mesh;
 	static constexpr cstr Name = "AugLag_DropletEncapsulation";

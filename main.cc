@@ -71,7 +71,7 @@ int main(int argc, char** argv )
 	timer.stop();
 
 	CFL_print_time_memory_useage(rheolef::dout,timer.get_time_passed());
-	std::ofstream o("useage.info");
+	std::ofstream  o("useage.info");
 	CFL_print_time_memory_useage(o,timer.get_time_passed());
 	o.close();
 

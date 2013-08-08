@@ -5,6 +5,7 @@
     <FEfields>
         <pspace>P1</pspace>
         <vspace>P2</vspace>
+        <BCtype>symmetry</BCtype>
     </FEfields> 
 
     <PhysicalParameters>
@@ -34,7 +35,7 @@
       <Secant>
          <max_iter>4</max_iter>
          <tolerance>1E-3</tolerance>
-         <target>-1.</target>
+         <target>-.5</target>
          <initial_point>0 0</initial_point>
          <next_input>3.</next_input>
       </Secant>
@@ -55,7 +56,7 @@
 
    <Mesh>
       <name>bubble</name>
-      <type>symx bubble</type>
+      <type>symxy bubble</type>
       <bubble_length>.8</bubble_length>
       <bubble_width>.1</bubble_width>
       <channel_width>1</channel_width>
@@ -72,14 +73,14 @@
    </Mesh>
 
     <Adaptation>
-        <cycles>3</cycles>
-        <hmin>.001</hmin>
+        <cycles>6</cycles>
+        <hmin>.0005</hmin>
         <hmax>.1</hmax>
-        <hcoef>1</hcoef>
+        <hcoef>2 1 .6</hcoef>
         <ratio>1</ratio>
         <err>1E-4</err>
         <errg>1e-3</errg>
         <additional>-AbsError</additional>
-        <n_vertices_max>20000</n_vertices_max>
+        <n_vertices_max>40000</n_vertices_max>
     </Adaptation>    
 </data>

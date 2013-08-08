@@ -108,8 +108,18 @@ struct bubble_BC
 		Uh[1]["right"] = 0.;
 	}
 
-	bubble_BC( XMLConfigFile const& )
-	{}
+	bubble_BC( XMLConfigFile const& conf )
+	{
+		cstr const t = conf("BCtype");
+		if( cstrcmp(t,"symmetry") )
+			type = sym;
+		else if( cstrcmp(t,"full") )
+			type = full;
+		else
+			throw std::logic_error("Wrong type for channelBC, can only be symmetry/full");
+	}
+	enum BCType:int { sym, full };
+	BCType type;
 };
 
 
