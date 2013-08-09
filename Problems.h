@@ -10,7 +10,6 @@
 
 #include "CFL.h"
 #include "BCs.h"
-#include "DiffusionForms.h"
 #include "BlockSystem_abtb.h"
 #include "IncompressibleStokesSolver.h"
 #include "StandardAugmentedLagrangian.h"

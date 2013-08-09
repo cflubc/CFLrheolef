@@ -15,7 +15,6 @@
 #include "ConfigXML.h"
 #include "FlowFields.h"
 #include "adaptationCriterions.h"
-#include "DiffusionForms.h"
 
 /**
  * Solve incompressible Stokes flow of the form:

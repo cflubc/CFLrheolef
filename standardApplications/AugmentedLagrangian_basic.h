@@ -30,7 +30,6 @@
 #include "ErrorAnalysis.h"
 #include "OutputFormatting.h"
 #include "TensorFieldIterator.h"
-#include "DiffusionForms.h"
 #include "ParameterOnFieldDOFs.h"
 
 namespace AugmentedLagrangian_param {
