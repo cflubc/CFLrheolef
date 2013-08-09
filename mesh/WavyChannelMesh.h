@@ -75,14 +75,9 @@ private:
 		bamg.print(nvertices," 1 104\n");
 		bamg.close_file();
 
-		std::ofstream fdmn( domain_filename(base_name).c_str() );
-		fdmn << "EdgeDomainNames\n"
-				"4\n"
-				"right\n"
-				"bottom\n"
-				"left\n"
-				"top";
-		fdmn.close();
+		RheolefDomainFile fdmn(base_name);
+		fdmn.print_edge_domains({"right","bottom","left","top"});
+		fdmn.close_file();
 	}
 
 	double const inlet_length;

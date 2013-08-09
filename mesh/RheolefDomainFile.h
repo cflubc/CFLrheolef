@@ -21,7 +21,7 @@ class RheolefDomainFile
 
 	void print_domain( std::string const& header, name_list names )
 	{
-		println_args(file, header," ", names.size() );
+		println_args(file, header,'\n', names.size() );
 		for(auto& name : names)
 			println_args(file,name);
 		file << '\n';
