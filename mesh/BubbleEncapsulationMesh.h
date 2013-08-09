@@ -36,9 +36,9 @@ class BubbleEncapsulationMesh
 public:
 
 	BubbleEncapsulationMesh( XMLConfigFile const& conf, string const& base_name ):
-		use_fineMesh_on_wall( conf.get_if_path_exist({"use_fineMesh_on_wall"},string("no"))=="yes" ),
+		h_wallMesh( conf.get_if_path_exist("hwall",double(0.)) ),
+		use_fineMesh_on_wall( 0<h_wallMesh ),
 		gen_droplet_mesh( type_str(conf)[1]==string("droplet")  ),
-		h_wallMesh( use_fineMesh_on_wall ? conf("hwall",h_wallMesh) : std::numeric_limits<double>::quiet_NaN() ),
 		rx( .5*conf("bubble_length",rx) ),
 		ry( .5*conf("bubble_width",ry) ),
 		 D( .5*conf("channel_width",D) ),
@@ -195,10 +195,10 @@ private:
 		return v;
 	}
 
+	double const h_wallMesh;
 	bool const use_fineMesh_on_wall;
 	bool const gen_droplet_mesh;
 
-	double const h_wallMesh;
 	double const rx;
 	double const ry;
 	double const  D;

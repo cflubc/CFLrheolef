@@ -73,7 +73,7 @@
    </Mesh>
 
     <Adaptation>
-        <cycles>3</cycles>
+        <cycles>2</cycles>
         <hmin>.0005</hmin>
         <hmax>.1</hmax>
         <hcoef>2 1 .6</hcoef>
