@@ -14,6 +14,7 @@
 
 #include "ConfigXML.h"
 #include "bamgcad.h"
+#include "RheolefDomainFile.h"
 
 
 class ChannelMesh
@@ -37,14 +38,9 @@ public:
 		else
 			throw std::logic_error("Wrong type for ChannelMesh provided");
 
-		std::ofstream fdmn( domain_filename(base_name) );
-		fdmn <<  "EdgeDomainNames\n"
-		         "4\n"
-		         "bottom\n"
-		         "right\n"
-		         "top\n"
-		         "left";
-		fdmn.close();
+		RheolefDomainFile fdmn(base_name);
+		fdmn.print_edge_domains({"bottom","right","top","left"});
+		fdmn.close_file();
 	}
 
 private:
