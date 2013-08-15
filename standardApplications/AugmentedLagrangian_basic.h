@@ -81,7 +81,6 @@ typedef unique<ParameterOnDOFs::unique_default_initializer> Bingham_unique;
 
 typedef non_unique<alpha_multiRegion_init> alpha_multiRegion;
 typedef non_unique<ParameterOnDOFs::multiRegion_field_initializer> Bingham_multiRegion;
-
 } // namespace AugmentedLagrangian_param
 
 template< typename VelocityMinimizationSolver,
@@ -107,7 +106,6 @@ public:
 		XML_INIT_VAR(conf,a,"Augmentation_coef"),
 		Bn( Xh[0], conf.child({"PhysicalParameters","Bn"}), typename BinghamParam::init() ),
 		alpha( Xh[0], conf.child({"PhysicalParameters","Viscosity"}), typename alphaParam::init(a) ),
-//		alpha( a/(1.+a) ),
 		velocity_minimizer(conf,fields,BC,a),
 		Tau(Xh, 0.),
 		Gam(Xh, -1000.),
@@ -128,7 +126,7 @@ public:
 	}
 
 	void update_lagrangeMultipliers_clac_strain_rate_multiplier(){
-		StrainRate_lagMultiplier_calc x(Gam,a);
+		StrainRate_lagMultiplier_calc<typename alphaParam::param_t::const_iterator> x(Gam,alpha.begin_dof(),a);
 		update_lagrangeMultipliers(x);
 	}
 
@@ -255,16 +253,23 @@ private:
 		void do_extra_stuff( int, Float, Float ) const {}
 	};
 
+	template< typename alphaIterator >
 	struct StrainRate_lagMultiplier_calc {
-		StrainRate_lagMultiplier_calc( field& Gamma, Float const& _a ):
+		StrainRate_lagMultiplier_calc( field& Gamma, alphaIterator const& itr, Float const& _a ):
 			G(Gamma),
-			beta(1./(1.+_a))
+			a_coef(_a),
+			alpha(itr)
 		{}
-		void operator++() {++G;}
+		void operator++() {
+			++G;
+			++alpha;
+		}
 		void do_extra_stuff( int const i, Float const& TaG, Float const& resi_stress_frac )
-		{G(i) = TaG*resi_stress_frac*beta;}
+		{G(i) = TaG*resi_stress_frac*(*alpha)/a_coef;}
+
 		Tensor_itr G;
-		Float const beta;
+		Float const& a_coef;
+		alphaIterator alpha;
 	};
 };
 
