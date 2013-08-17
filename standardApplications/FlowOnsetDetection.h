@@ -18,7 +18,7 @@
 #include "PrintArguments.h"
 
 
-template< typename VelocityMinimizationSolver, typename ForcingRHS >
+template< typename BasicAugmentedLagrangian, typename ForcingRHS >
 class FlowOnsetDetection
 {
 	typedef rheolef::Float Float;
@@ -31,7 +31,8 @@ public:
 								 FieldsPool& fields,
 								 DirichletBC BC ):
 		force_rhs(conf.child("rhs_force_term"),fields.Uspace()),
-		sAL(conf.child("Solver"),fields,BC),
+		AL(solver_child(conf),fields,BC),
+		algo(solver_child(conf)),
 		XML_INIT_VAR(conf,tolerance,"force_param_tolerance"),
 		XML_INIT_VAR(conf,initial_dparam,"force_param_delta")
 	 {}
@@ -59,7 +60,7 @@ public:
 			else
 				param += dparam;
 		}
-		sAL.write_results();
+		AL.write_results();
 	}
 
 private:
@@ -68,8 +69,8 @@ private:
 	{
 		print_args(std::cout,"Param: ",param);
 		force_rhs.set_scale_factor(param);
-		sAL.solve(force_rhs);
-		rheolef::field const& Gam = sAL.get_strainRate_lagrangeMultiplier();
+		AL.solve(force_rhs);
+		rheolef::field const& Gam = AL.get_strainRate_lagrangeMultiplier();
 		bool has_flow;
 		if( vector_dot(Gam,Gam)==0 ){
 			printf(" No flow!\n");
@@ -83,9 +84,12 @@ private:
 		return has_flow;
 	}
 
+	XMLConfigFile solver_child( XMLConfigFile const& conf )
+	{return conf.child("Solver");}
 
 	ForcingRHS force_rhs;
-	StandardAugmentedLagrangianSolver<VelocityMinimizationSolver> sAL;
+	BasicAugmentedLagrangian AL;
+	standard_augmentedLagrangian_algo algo;
 
 	Float const tolerance;
 	Float const initial_dparam;

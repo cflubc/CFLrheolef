@@ -11,7 +11,8 @@
 #include "rheolef.h"
 
 #include "ConfigXML.h"
-#include "StandardAugmentedLagrangianSolver.h"
+#include "AugmentedLagrangian_basic.h"
+#include "standard_augmentedLagrangian_algo.h"
 
 
 template<
@@ -19,7 +20,6 @@ template<
 		typename VelocityRHSManipulator >
 class StandardAugmentedLagrangian
 {
-	typedef rheolef::field field;
 public:
 
 	template< typename FieldsPool, typename DirichletBC >
@@ -27,20 +27,24 @@ public:
 								 FieldsPool& fields,
 								 DirichletBC BC ):
 		rhs_manipulator(conf.child("source_term"),fields.Uspace()),
-		sAL(conf,fields,BC)
+		AL(conf,fields,BC),
+		algo(conf)
 	{}
 
 	void run() {
-		sAL.solve(rhs_manipulator);
-		sAL.write_results();
+		algo.run(AL,rhs_manipulator);
+		AL.write_results();
+		algo.save_residual_history_to_file();
 	}
 
-	field adapt_criteria() const
-	{return sAL.adapt_criteria();}
+	rheolef::field adapt_criteria() const
+	{return AL.adapt_criteria();}
 
 private:
 	VelocityRHSManipulator rhs_manipulator;
-	StandardAugmentedLagrangianSolver<BasicAugmentedLagrangian> sAL;
+	BasicAugmentedLagrangian AL;
+	standard_augmentedLagrangian_algo algo;
+//	StandardAugmentedLagrangianSolver<BasicAugmentedLagrangian> sAL;
 };
 
 
