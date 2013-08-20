@@ -41,14 +41,14 @@
    </LowResolution_step>
 
    <HighResolution_step>
-      <max_iteration>0</max_iteration>
+      <max_iteration>2</max_iteration>
       <flowrate_convergence_limit>1E-5</flowrate_convergence_limit>
 
       <AugmentedLag>
          <reports_frequency>50</reports_frequency>
          <convergence_limit>3E-6</convergence_limit>
-         <max_iteration>1000</max_iteration>
-         <min_iteration>200</min_iteration>
+         <max_iteration>100</max_iteration>
+         <min_iteration>50</min_iteration>
       </AugmentedLag>
    </HighResolution_step>
 

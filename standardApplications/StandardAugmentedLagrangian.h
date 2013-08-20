@@ -32,7 +32,10 @@ public:
 	{}
 
 	void run() {
-		algo.run(AL,rhs_manipulator);
+		AL.set_rhs_const_part_to_discrete_dirichlet_rhs();
+		rhs_manipulator.add_to_rhs( AL.vel_rhs_const_part() );
+		algo.run(AL);
+		AL.update_lagrangeMultipliers_clac_strain_rate_multiplier();
 		AL.write_results();
 		algo.save_residual_history_to_file();
 	}
@@ -44,7 +47,6 @@ private:
 	VelocityRHSManipulator rhs_manipulator;
 	BasicAugmentedLagrangian AL;
 	standard_augmentedLagrangian_algo algo;
-//	StandardAugmentedLagrangianSolver<BasicAugmentedLagrangian> sAL;
 };
 
 

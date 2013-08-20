@@ -23,6 +23,7 @@
 #include "BorderFluxCalculator.h"
 #include "ResidualTablePrinter.h"
 #include "AugmentedLagrangian_basic.h"
+#include "standard_augmentedLagrangian_algo.h"
 
 
 
@@ -131,12 +132,7 @@ public:
 		HighResolution_conf( conf.child("HighResolution_step") ),
 		XML_INIT_VAR(HighResolution_conf,HR_max_iteration,"max_iteration"),
 		XML_INIT_VAR(HighResolution_conf,HR_converge_limit,"flowrate_convergence_limit"),
-
-		HR_AugLag_conf( HighResolution_conf.child("AugmentedLag") ),
-		XML_INIT_VAR(HR_AugLag_conf,HR_AugLag_converge_limit,"convergence_limit"),
-		XML_INIT_VAR(HR_AugLag_conf,HR_AugLag_max_iteration,"max_iteration"),
-		XML_INIT_VAR(HR_AugLag_conf,HR_AugLag_min_iteration,"min_iteration"),
-		HR_AugLag_n_iterations_without_report( HR_AugLag_conf("reports_frequency",HR_AugLag_n_iterations_without_report)-1 ),
+		algo(HighResolution_conf.child("AugmentedLag")),
 		unitflow(this,fields)
 	{}
 
@@ -197,35 +193,17 @@ private:
 	{
 		predictor.set_tolerance_and_Maxiteration(HR_converge_limit,HR_max_iteration);
 		predictor.reset();
-		ConvergenceMonitor residuals("highRes_augmentedlag",{"|Un+1-Un|L2","|Gamdot-Gam|L2"});
-
 		while( predictor.not_converged_and_have_iterations_left() )
 		{
-			auto output = make_residual_table(report_header_reprint_frequency,std::cout,10,15,17);
-			size_t niter = 0;
-			residuals.clear();
 			AL.vel_rhs_const_part() = rhs_control.get_rhs( predictor.get_input() ) + dirichlet_rhs;
-			AL.reset_lagrangeMultipliers();
-			for(;niter<HR_AugLag_max_iteration;)
-			{
-				Float Gamres, Ures;
-				AL.iterate_ntimes_report_strain_velocity_change(HR_AugLag_n_iterations_without_report,Gamres,Ures);
-				niter += HR_AugLag_n_iterations_without_report+1;
-
-				residuals.add_point(niter,{Ures,Gamres});
-				output.print_header_if_needed("\niteration","|Un+1-Un|L2","|Gamdot-Gam|L2");
-				output.print(niter,Ures,Gamres);
-				if( HR_AugLag_min_iteration<niter && residuals.is_converged(HR_AugLag_converge_limit) )
-					break;
-			}
-
+			algo.run(AL);
 			Float const flux = get_flowrate();
-			printf("[Iter %u] Control parameter: %g, Flowrate: %g\n\n",
-					predictor.n_iterations_done(), predictor.get_input(), flux);
-
+			print_args(rheolef::dout,"[Iter ",predictor.n_iterations_done(),
+					  "] Control parameter: ",predictor.get_input(),
+					  ", Flowrate: ",flux);
 			predictor.predict_new_input(flux);
 		}
-		residuals.save_to_file();
+		algo.save_residual_history_to_file();
 	}
 
 	Float get_flowrate() const
@@ -266,13 +244,7 @@ private:
 	XMLConfigFile const HighResolution_conf;
 	size_t const HR_max_iteration;
 	Float  const HR_converge_limit;
-
-	XMLConfigFile const HR_AugLag_conf;
-	Float  const HR_AugLag_converge_limit;
-	size_t const HR_AugLag_max_iteration;
-	size_t const HR_AugLag_min_iteration;
-	size_t const HR_AugLag_n_iterations_without_report;
-
+	standard_augmentedLagrangian_algo algo;
 	UnitFlowIterator unitflow;
 };
 

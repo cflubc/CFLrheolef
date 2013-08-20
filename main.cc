@@ -25,6 +25,7 @@
  * of restart, reads the proper geometry and pass to adapt loop
  */
 
+
 typedef Problem_AugLag_ChannelUnitFlow  Problem;
 typedef Problem::BC DirichletBoundaryConditions;
 typedef Problem::FieldsPool FieldsPool;
@@ -32,7 +33,6 @@ typedef Problem::Mesh  Mesh;
 typedef AdaptiveDriver<Problem::Application,Problem::FieldsPool> Driver;
 
 
-/**/
 int main(int argc, char** argv )
 {
 	rheolef::environment env(argc,argv);

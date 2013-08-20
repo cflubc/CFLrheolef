@@ -69,7 +69,7 @@ private:
 	{
 		print_args(std::cout,"Param: ",param);
 		force_rhs.set_scale_factor(param);
-		AL.solve(force_rhs);
+		algo.run(AL,force_rhs);
 		rheolef::field const& Gam = AL.get_strainRate_lagrangeMultiplier();
 		bool has_flow;
 		if( vector_dot(Gam,Gam)==0 ){
