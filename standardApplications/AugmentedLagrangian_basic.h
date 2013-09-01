@@ -111,6 +111,7 @@ public:
 		Gam(Xh, -1000.),
 		Gamdot(Xh, 0.),
 		TminusaG(Xh, 0.),
+		rhs_augmentation(fields.Uspace(), 0.),
 		Gamdot_server(fields.Uh()),
 		div_ThUh( -.5*trans(Gamdot_server.set_desired_strainrate_space(Xh)) ),
 		deltaTau(Tau),
@@ -166,8 +167,11 @@ public:
 		dU = deltaU.calculate_field_change();
 	}
 
-	field const augmented_lagraniang_rhs() const
-	{return div_ThUh*TminusaG;}
+	field const augmented_lagraniang_rhs()
+	{
+		rhs_augmentation = div_ThUh*TminusaG;
+		return rhs_augmentation;
+	}
 
 	field adapt_criteria() const {
 		// just scalar version of Th
@@ -221,6 +225,7 @@ private:
 	field Gam;   ///< Strain rate Lagrange multiplier
 	field Gamdot;  ///< Strain rate of velocity
 	field TminusaG;
+	field rhs_augmentation;
 	StrainRateCalculator Gamdot_server;
 	rheolef::form div_ThUh;
 	L2norm_calculator deltaTau;
