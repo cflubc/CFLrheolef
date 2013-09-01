@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+    <problem>NavierStokesCavity</problem>
+
+    <FEfields>
+        <pspace>P1</pspace>
+        <vspace>P2</vspace>
+    </FEfields>
+
+   <PhysicalParameters>
+      <Re>100</Re>
+      <dt>.01</dt>
+   </PhysicalParameters>
+
+   <tolerance>1e-5</tolerance>
+   <max_iteration>1000</max_iteration>
+
+   <Mesh>
+      <name>cavity</name>
+      <width>1</width>
+      <length>1</length>
+      <type>full</type>
+      <command_line_args>-hmax .1</command_line_args>
+   </Mesh>
+
+    <Adaptation>
+        <cycles>0</cycles>
+        <n_vertices_max>10000</n_vertices_max>
+        <hmin>.01</hmin>
+        <hmax>.3</hmax>
+        <hcoef>4</hcoef>
+        <ratio>1</ratio>
+        <err>1e-3</err>
+        <errg>1e-1</errg>
+    </Adaptation>    
+</data>

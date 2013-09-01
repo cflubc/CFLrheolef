@@ -14,6 +14,7 @@
 #include "IncompressibleStokesSolver.h"
 #include "StandardAugmentedLagrangian.h"
 #include "AugmentedLagrangianUnitFlow.h"
+#include "IncompressibleNavierStokes.h"
 
 #include "NormalStressBC_RHS.h"
 #include "BodyForce.h"
@@ -41,6 +42,15 @@ struct Problem_NewtonianCavity
 	typedef cavityBC BC;
 	typedef ChannelMesh Mesh;
 	static constexpr cstr Name = "NewtonianCavity";
+};
+
+struct Problem_NavierStokesCavity
+{
+	typedef IncompressibleNavierStokes Application;
+	typedef FlowFields FieldsPool;
+	typedef cavityBC BC;
+	typedef ChannelMesh Mesh;
+	static constexpr cstr Name = "NavierStokesCavity";
 };
 
 struct Problem_WavyFouling

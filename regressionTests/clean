@@ -1,1 +1,3 @@
-rm "$1"* result*/ -r *.vtk
+#!/bin/bash
+rm -rf "${1}"* result*/ *.vtk *.eps *.gnu *.cvg
+

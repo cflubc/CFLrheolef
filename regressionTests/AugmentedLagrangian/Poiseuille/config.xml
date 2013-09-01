@@ -16,6 +16,7 @@
    <Augmentation_coef>10</Augmentation_coef>
    <convergence_limit>5E-6</convergence_limit>
    <max_iteration>800</max_iteration>
+   <min_iteration>100</min_iteration>
    <reports_frequency>50</reports_frequency>
    <report_header_reprint_frequency>30</report_header_reprint_frequency>
 

@@ -38,8 +38,8 @@ public:
 	unitflow_iterator( UnitFlowApp *const, FieldPool& ) {}
 
 	template< typename UnitFlowApp >
-	static void iterate( UnitFlowApp *const app, rheolef::field const& dirichlet_rhs )
-	{app->nonlinear_uniflow_iteration(dirichlet_rhs);}
+	static void iterate( UnitFlowApp *const app )
+	{app->nonlinear_uniflow_iteration();}
 
 	void finalize_iterations() const {}
 };
@@ -62,11 +62,10 @@ public:
 	{}
 
 	template< typename UnitFlowApp >
-	void iterate( UnitFlowApp *const app, field const& dirichlet_rhs )
+	void iterate( UnitFlowApp *const app )
 	{
 		auto& predictor = app->predictor;
-		auto& AL = app->AL;
-		AL.solve_vel_minization( AL.vel_rhs_const_part() );
+		app->AL.solve_vel_minization( app->vel_rhs_const_part );
 		Float const flowrate_discripency = predictor.get_target_val()-app->get_flowrate();
 		param = flowrate_discripency/normalrhs_flowrate;
 		Uh += param*normalrhs_Usolution;
@@ -80,11 +79,9 @@ private:
 	template< typename UnitFlowApp, typename FieldPool >
 	static field& calc_normalrhs_flow_helper( UnitFlowApp *const app, FieldPool& fields )
 	{
-		auto& predictor = app->predictor;
-		auto& AL = app->AL;
-		app->AL.set_rhs_const_part_to_discrete_dirichlet_rhs();
-		app->AL.vel_rhs_var_part() = app->rhs_control.get_rhs();
-		app->AL.solve_vel_minization();
+		app->AL.get_velocity_discrete_dirichlet_rhs( app->vel_rhs_const_part );
+		app->vel_rhs = app->vel_rhs_const_part + app->rhs_control.get_rhs();
+		app->AL.solve_vel_minization( app->vel_rhs );
 
 		return fields.Uh();
 	}
@@ -118,6 +115,8 @@ public:
 	AugmentedLagrangianUnitFlow( XMLConfigFile const& conf,
 								 FieldsPool& fields,
 								 DirichletBC BC ):
+		vel_rhs_const_part(fields.Uspace(), 0.),
+		vel_rhs(vel_rhs_const_part),
 		rhs_control(conf.child("unitflow_rhs_controller"),fields.Uspace()),
 		flowrate(conf("flowrate_calculation_edge_name"),fields.Uh()),
 		AL(conf,fields,BC),
@@ -146,8 +145,8 @@ public:
 		ConvergenceMonitor residuals("lowResolution",{"|Un+1-Un|L2","|Gamdot-Gam|L2","ControlParam"});
 		size_t niter = 0;
 
-		AL.set_rhs_const_part_to_discrete_dirichlet_rhs();
-		field const dirichlet_rhs = AL.vel_rhs_const_part();
+		AL.get_velocity_discrete_dirichlet_rhs(vel_rhs_const_part);
+		field const dirichlet_rhs = vel_rhs_const_part;
 		while( niter<LR_max_iteration && !seq.sequence_steady_state_reached(residuals[2]) )
 		{
 			for(size_t i=0; i<LR_n_iterations_without_report; ++i)
@@ -195,8 +194,8 @@ private:
 		predictor.reset();
 		while( predictor.not_converged_and_have_iterations_left() )
 		{
-			AL.vel_rhs_const_part() = rhs_control.get_rhs( predictor.get_input() ) + dirichlet_rhs;
-			algo.run(AL);
+			vel_rhs_const_part = rhs_control.get_rhs( predictor.get_input() ) + dirichlet_rhs;
+			algo.run(AL,vel_rhs_const_part,vel_rhs);
 			Float const flux = get_flowrate();
 			print_args(rheolef::dout,"[Iter ",predictor.n_iterations_done(),
 					  "] Control parameter: ",predictor.get_input(),
@@ -211,24 +210,25 @@ private:
 
 	void unitlfow_iteration( field const& dirichlet_rhs )
 	{
-		unitflow.iterate(this,dirichlet_rhs);
+		unitflow.iterate(this);
 		AL.update_lagrangeMultipliers_fast();
-		AL.vel_rhs_const_part() = AL.augmented_lagraniang_rhs() + dirichlet_rhs;
+		vel_rhs_const_part = AL.augmented_lagraniang_rhs() + dirichlet_rhs;
 	}
 
-	void nonlinear_uniflow_iteration( field const& dirichlet_rhs )
+	void nonlinear_uniflow_iteration()
 	{
 		predictor.reset();
 		// unit flow secant loop
 		while( predictor.not_converged_and_have_iterations_left() )
 		{
-			AL.build_complete_rhs_and_solve_vel_minimization(
-							rhs_control.get_rhs( predictor.get_input() )
-					 	 	 	 	 	 	 	 	 	 	);
+			vel_rhs = vel_rhs_const_part + rhs_control.get_rhs( predictor.get_input() );
+			AL.solve_vel_minization(vel_rhs);
 			predictor.predict_new_input( get_flowrate() );
 		}
 	}
 
+	field vel_rhs_const_part;
+	field vel_rhs;
 
 	VelocityRHSManipulator rhs_control;
 	BorderFluxCalculator const flowrate;

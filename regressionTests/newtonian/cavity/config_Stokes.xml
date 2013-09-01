@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <data>
-    <problem>NewtonianCavity</problem>
+    <problem>NavierStokesCavity</problem>
 
     <FEfields>
         <pspace>P1</pspace>
         <vspace>P2</vspace>
-        <BCtype>full</BCtype>
     </FEfields>
     
    <Mesh>
@@ -13,7 +12,7 @@
       <width>1</width>
       <length>1</length>
       <type>full</type>
-      <command_line_args>-hmax .5</command_line_args>
+      <command_line_args>-hmax .1</command_line_args>
    </Mesh>
 
     <Adaptation>

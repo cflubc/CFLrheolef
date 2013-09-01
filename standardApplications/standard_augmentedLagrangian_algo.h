@@ -17,6 +17,7 @@
 
 class standard_augmentedLagrangian_algo
 {
+	typedef rheolef::field field;
 	typedef rheolef::Float Float;
 	typedef std::size_t size_t;
 
@@ -27,12 +28,18 @@ public:
 		residuals_monitor("converge_history", {"|Un+1-Un|","|Gamdot-Gam|"}),
 		XML_INIT_VAR(conf,max_iteration,"max_iteration"),
 		XML_INIT_VAR(conf,min_iteration,"min_iteration"),
-		n_iterations_without_report( conf("reports_frequency",n_iterations_without_report)-1 ),
+		XML_INIT_VAR(conf,report_frequency,"reports_frequency"),
 		report_header_reprint_frequency( conf.get_if_path_exist({"report_header_reprint_frequency"},30) )
 	{}
 
 	template< typename augmentedLag_basic >
-	void run( augmentedLag_basic& AL )
+	void run( augmentedLag_basic& AL, field const& vel_rhs_const_part ){
+		field vel_rhs(vel_rhs_const_part.get_space(), 0.);
+		run(AL,vel_rhs_const_part,vel_rhs);
+	}
+
+	template< typename augmentedLag_basic >
+	void run( augmentedLag_basic& AL, field const& vel_rhs_const_part, field& vel_rhs )
 	{
 		auto program_output = make_residual_table(report_header_reprint_frequency,std::cout,10,16,16);
 		residuals_monitor.clear();
@@ -40,14 +47,15 @@ public:
 		size_t niter = 0;
 		do {
 			Float Gamres, Ures;
-			AL.iterate_ntimes_report_strain_velocity_change(n_iterations_without_report,Gamres,Ures);
-			niter += n_iterations_without_report +1;
+			AL.iterate_ntimes_report_strain_velocity_change(report_frequency,vel_rhs_const_part,vel_rhs,Gamres,Ures);
+			niter += report_frequency;
 			residuals_monitor.add_point(niter,{Ures,Gamres});
 
 			program_output.print_header_if_needed("\niteration","|Un+1-Un|L2","|Gamdot-Gam|L2");
 			program_output.print(niter,Ures,Gamres);
-		} while( (min_iteration<niter) && (niter<max_iteration) &&
-				!residuals_monitor.is_converged(convergence_limit) );
+		} while( (niter<min_iteration) ||
+				 (niter<max_iteration && !residuals_monitor.is_converged(convergence_limit) )
+			   );
 		print_solution_convergence_message( niter<max_iteration );
 	}
 
@@ -59,7 +67,7 @@ public:
 
 	size_t const max_iteration;
 	size_t const min_iteration;
-	size_t const n_iterations_without_report;
+	size_t const report_frequency;
 	size_t const report_header_reprint_frequency;
 };
 

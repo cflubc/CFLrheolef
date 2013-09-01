@@ -28,13 +28,14 @@ public:
 								 DirichletBC BC ):
 		rhs_manipulator(conf.child("source_term"),fields.Uspace()),
 		AL(conf,fields,BC),
-		algo(conf)
+		algo(conf),
+		vel_rhs_const_part(fields.Uspace(), 0.)
 	{}
 
 	void run() {
-		AL.set_rhs_const_part_to_discrete_dirichlet_rhs();
-		rhs_manipulator.add_to_rhs( AL.vel_rhs_const_part() );
-		algo.run(AL);
+		AL.get_velocity_discrete_dirichlet_rhs(vel_rhs_const_part);
+		rhs_manipulator.add_to_rhs(vel_rhs_const_part);
+		algo.run(AL,vel_rhs_const_part);
 		AL.update_lagrangeMultipliers_clac_strain_rate_multiplier();
 		AL.write_results();
 		algo.save_residual_history_to_file();
@@ -47,6 +48,7 @@ private:
 	VelocityRHSManipulator rhs_manipulator;
 	BasicAugmentedLagrangian AL;
 	standard_augmentedLagrangian_algo algo;
+	rheolef::field vel_rhs_const_part;
 };
 
 

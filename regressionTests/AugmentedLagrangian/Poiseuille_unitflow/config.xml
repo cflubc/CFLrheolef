@@ -41,7 +41,7 @@
    </LowResolution_step>
 
    <HighResolution_step>
-      <max_iteration>2</max_iteration>
+      <max_iteration>0</max_iteration>
       <flowrate_convergence_limit>1E-5</flowrate_convergence_limit>
 
       <AugmentedLag>

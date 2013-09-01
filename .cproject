@@ -4,7 +4,7 @@
 		<cconfiguration id="cdt.managedbuild.config.gnu.exe.debug.573256013">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.debug.573256013" moduleId="org.eclipse.cdt.core.settings" name="Debug">
 				<macros>
-					<stringMacro name="rheolef_path" type="VALUE_TEXT" value="/home/ali/Install/rheolef-dev"/>
+					<stringMacro name="rheolef_path" type="VALUE_TEXT" value="/home/ali/Install/rheolef-mumps"/>
 				</macros>
 				<externalSettings/>
 				<extensions>
@@ -56,9 +56,9 @@
 							<tool command="g++" id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.357181275" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.libs.30787449" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="rheolef"/>
+									<listOptionValue builtIn="false" value="gmp"/>
+									<listOptionValue builtIn="false" value="dmumps_seq"/>
 									<listOptionValue builtIn="false" value="CGAL"/>
-									<listOptionValue builtIn="false" value="umfpack"/>
-									<listOptionValue builtIn="false" value="amd"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.1302734132" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${rheolef_path}/lib&quot;"/>

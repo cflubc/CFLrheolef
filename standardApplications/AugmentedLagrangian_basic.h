@@ -111,8 +111,6 @@ public:
 		Gam(Xh, -1000.),
 		Gamdot(Xh, 0.),
 		TminusaG(Xh, 0.),
-		vel_rhs(fields.Uspace(), 0.),
-		vel_rhs_const(fields.Uspace(), 0.),
 		Gamdot_server(fields.Uh()),
 		div_ThUh( -.5*trans(Gamdot_server.set_desired_strainrate_space(Xh)) ),
 		deltaTau(Tau),
@@ -130,31 +128,32 @@ public:
 		update_lagrangeMultipliers(x);
 	}
 
-	Float iterate_report_strain_change(){
+	Float iterate_report_strain_change( field const& const_rhs, field& rhs ){
 		deltaTau.save_field();
-		iterate();
+		iterate(const_rhs,rhs);
 		return deltaTau.calculate_field_change()/a;
 	}
 
-	void iterate_ntimes( const int niter){
+	void iterate_ntimes( int const niter, field const& const_rhs, field& rhs ){
 		for( int i=0; i<niter; ++i )
-			iterate();
+			iterate(const_rhs,rhs);
 	}
 
-	void iterate_ntimes_report_strain_velocity_change( const int niter, Float& dGam, Float& dU ){
-		iterate_ntimes(niter);
-		iterate_report_strain_velocity_change(dGam,dU);
+	void iterate_ntimes_report_strain_velocity_change( int const niter, field const& const_rhs, field& rhs, Float& dGam, Float& dU ){
+		iterate_ntimes(niter-1,const_rhs,rhs);
+		iterate_report_strain_velocity_change(const_rhs,rhs,dGam,dU);
 	}
 
-	void iterate_report_strain_velocity_change( Float& dT, Float& dU ){
+	void iterate_report_strain_velocity_change( field const& const_rhs, field& rhs, Float& dT, Float& dU ){
 		save_strain_velocity();
-		iterate();
+		iterate(const_rhs,rhs);
 		report_strain_velocity_change(dT,dU);
 	}
 
-	void iterate(){
+	void iterate( field const& const_rhs, field& rhs ){
 		update_lagrangeMultipliers_fast();
-		build_complete_rhs_and_solve_vel_minimization( augmented_lagraniang_rhs() );
+		rhs = const_rhs + augmented_lagraniang_rhs();
+		solve_vel_minization(rhs);
 	}
 
 	void save_strain_velocity(){
@@ -196,8 +195,8 @@ public:
 	std::string geo_name() const
 	{return Xh.get_geo().name();}
 
-	void set_rhs_const_part_to_discrete_dirichlet_rhs(){
-		velocity_minimizer.set_discrete_dirichlet_rhs(vel_rhs_const);
+	void get_velocity_discrete_dirichlet_rhs( field& f ) {
+		velocity_minimizer.set_discrete_dirichlet_rhs(f);
 	}
 
 	void reset_lagrangeMultipliers(){
@@ -205,23 +204,8 @@ public:
 		TminusaG = 0.;
 	}
 
-	void build_complete_rhs_and_solve_vel_minimization( field const& f ){
-		vel_rhs = vel_rhs_const + f;
-		solve_vel_minization();
-	}
-
-	void solve_vel_minization() const {
-		solve_vel_minization(vel_rhs);
-	}
-
 	void solve_vel_minization( field const& rhs ) const
 	{velocity_minimizer.solve(rhs);}
-
-	field& vel_rhs_const_part()
-	{return vel_rhs_const;}
-
-	field& vel_rhs_var_part()
-	{return vel_rhs;}
 
 	field const& get_strainRate_lagrangeMultiplier() const
 	{return Gam;}
@@ -231,15 +215,12 @@ private:
 	Float const a;       ///< Augmentation coef
 	typename BinghamParam::param_t Bn;
 	typename alphaParam::param_t alpha;
-//	Float const alpha;   ///< helper const coeficient
 
 	VelocityMinimizationSolver velocity_minimizer;
 	field Tau;   ///< Stress Lagrange multiplier
 	field Gam;   ///< Strain rate Lagrange multiplier
 	field Gamdot;  ///< Strain rate of velocity
 	field TminusaG;
-	field vel_rhs;
-	field vel_rhs_const;
 	StrainRateCalculator Gamdot_server;
 	rheolef::form div_ThUh;
 	L2norm_calculator deltaTau;

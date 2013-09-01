@@ -30,6 +30,7 @@ public:
 	FlowOnsetDetection( const XMLConfigFile& conf,
 								 FieldsPool& fields,
 								 DirichletBC BC ):
+	    vel_rhs(fields.Uspace(), 0.),
 		force_rhs(conf.child("rhs_force_term"),fields.Uspace()),
 		AL(solver_child(conf),fields,BC),
 		algo(solver_child(conf)),
@@ -68,8 +69,7 @@ private:
 	bool has_flow_for( Float const& param )
 	{
 		print_args(std::cout,"Param: ",param);
-		force_rhs.set_scale_factor(param);
-		algo.run(AL,force_rhs);
+		algo.run(AL,force_rhs.get_rhs(param),vel_rhs);
 		rheolef::field const& Gam = AL.get_strainRate_lagrangeMultiplier();
 		bool has_flow;
 		if( vector_dot(Gam,Gam)==0 ){
@@ -87,6 +87,7 @@ private:
 	XMLConfigFile solver_child( XMLConfigFile const& conf )
 	{return conf.child("Solver");}
 
+	rheolef::field vel_rhs;
 	ForcingRHS force_rhs;
 	BasicAugmentedLagrangian AL;
 	standard_augmentedLagrangian_algo algo;
