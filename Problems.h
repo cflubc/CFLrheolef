@@ -46,7 +46,7 @@ struct Problem_NewtonianCavity
 
 struct Problem_NavierStokesCavity
 {
-	typedef IncompressibleNavierStokes Application;
+	typedef IncompressibleNavierStokes<ALbasic_unique_params> Application;
 	typedef FlowFields FieldsPool;
 	typedef cavityBC BC;
 	typedef ChannelMesh Mesh;

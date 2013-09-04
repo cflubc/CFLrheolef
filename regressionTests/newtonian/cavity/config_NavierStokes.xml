@@ -13,7 +13,8 @@
    </PhysicalParameters>
 
    <tolerance>1e-5</tolerance>
-   <max_iteration>1000</max_iteration>
+   <max_iteration>500</max_iteration>
+   <report_frequency>20</report_frequency>
 
    <Mesh>
       <name>cavity</name>

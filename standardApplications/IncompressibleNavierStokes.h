@@ -14,9 +14,13 @@
 
 #include "rheolef.h"
 #include "rheolef/diststream.h"
+
+#include "CFL.h"
+#include "BlockSystem_abtb.h"
 #include "ConfigXML.h"
+#include "ResidualTablePrinter.h"
 
-
+template< typename BasicAugmentedLagrangian >
 class IncompressibleNavierStokes
 {
 	typedef rheolef::Float Float;
@@ -26,50 +30,54 @@ class IncompressibleNavierStokes
 	typedef rheolef::characteristic characteristic;
 	typedef rheolef::odiststream odiststream;
 	typedef std::string string;
+	typedef std::size_t size_t;
 
-	int navier_stokes_solve (field l0h, odiststream *p_derr=0)
+	void navier_stokes_solve()
 	{
 	  const space& Xh = uh.get_space();
 	  const space& Qh = ph.get_space();
-	  string label = "navier-stokes-" + Xh.get_geo().name();
 	  rheolef::quadrature_option_type qopt;
 	  qopt.set_family(rheolef::quadrature_option_type::gauss_lobatto);
 	  qopt.set_order(Xh.degree());
-	  rheolef::trial u (Xh), p (Qh);
-	  rheolef::test  v (Xh), q (Qh);
-	  form mp = integrate (p*q, qopt);
-	  form m  = integrate (dot(u,v), qopt);
-	  form a  = integrate (2*ddot(D(u),D(v)) + 1.5*(Re/delta_t)*dot(u,v), qopt);
-	  form b  = integrate (-div(u)*q, qopt);
-	  rheolef::solver_abtb stokes (a.uu(), b.uu(), mp.uu());
-	  if (p_derr != 0) *p_derr << "[" << label << "] #n |du/dt|" << std::endl;
+	  rheolef::trial u(Xh);
+	  rheolef::test  v(Xh), q(Qh);
+	  form const m  = integrate (dot(u,v), qopt);
+	  form const a  = integrate (10.*2.*ddot(D(u),D(v)) + 1.5*(Re/delta_t)*dot(u,v), qopt);
+	  form const b  = integrate (-div(u)*q, qopt);
+	  BlockSystem_abtb solver(xml,a,b);
+	  field dirichlet_rhs(Xh,0.);
+	  solver.set_discrete_dirichlet_rhs(dirichlet_rhs,uh);
+
+	  auto output = make_residual_table(25,std::cout,10,16);
+	  bool converged = false;
 	  field uh1 = uh;
-	  for (size_t n = 0; true; n++) {
-	    field uh2 = uh1;
-	    uh1  = uh;
-	    field uh_star = 2.0*uh1 - uh2;
-	    characteristic X1 (    -delta_t*uh_star);
-	    characteristic X2 (-2.0*delta_t*uh_star);
-	    field l1h = integrate (dot(compose(uh1,X1),v), qopt);
-	    field l2h = integrate (dot(compose(uh2,X2),v), qopt);
-	    field lh  = l0h + (Re/delta_t)*(2*l1h - 0.5*l2h);
-	    stokes.solve (lh.u() - a.ub()*uh.b(), -(b.ub()*uh.b()),
-	                  uh.set_u(), ph.set_u());
+	  size_t n = 0;
+	  Float residual;
+	  do
+	  {
+		field uh2;
+		for(size_t i=0; i<report_freq; ++i)
+		{
+			uh2 = uh1;
+			uh1  = uh;
+			field const uh_star = 2.0*uh1 - uh2;
+			characteristic const X1(    -delta_t*uh_star);
+			characteristic const X2(-2.0*delta_t*uh_star);
+			field const l1h = integrate(dot(compose(uh1,X1),v), qopt);
+			field const l2h = integrate (dot(compose(uh2,X2),v), qopt);
 
+			AL.update_lagrangeMultipliers_fast();
+			field const lh  = dirichlet_rhs + (Re/delta_t)*(2*l1h - 0.5*l2h) + AL.augmented_lagraniang_rhs();
+			solver.solve(uh,ph,lh);
+		}
+		n += report_freq;
 
-	    field duh_dt = (3*uh - 4*uh1 + uh2)/(2*delta_t);
-	    Float residual = sqrt(m(duh_dt,duh_dt));
-	    if (p_derr != 0) *p_derr << "[" << label << "] "<< n << " " << residual << std::endl;
-	    if (residual < tol) {
-	      tol = residual;
-	      max_iter = n;
-	      return 0;
-	    }
-	    if (n == max_iter-1) {
-	      tol = residual;
-	      return 1;
-	    }
-	  }
+	    field const duh_dt = (3.*uh - 4.*uh1 + uh2)/(2.*delta_t);
+	    residual = sqrt(m(duh_dt,duh_dt));
+	    output.print_header_if_needed("\niteration","|du/dt|L2");
+	    output.print(n,residual);
+	  } while( n<max_iter && tol<residual );
+	  print_solution_convergence_message(converged);
 	}
 public:
 	enum : bool { isLinear=false };
@@ -80,33 +88,34 @@ public:
 	ph(fields.Ph()),
 	Re( conf({"PhysicalParameters","Re"},Re) ),
 	delta_t( conf({"PhysicalParameters","dt"},delta_t) ),
-	XML_INIT_VAR(conf,tol,"tolerance"),
-	XML_INIT_VAR(conf,max_iter,"max_iteration")
+	XML_INIT_VAR(conf,tol,"convergence_limit"),
+	XML_INIT_VAR(conf,max_iter,"max_iteration"),
+	XML_INIT_VAR(conf,report_freq,"report_frequency"),
+	xml(conf),
+	AL(conf,fields,BC)
 	{}
 
 	void run()
 	{
 		using rheolef::catchmark;
-		field fh(uh.get_space(),0);
-		navier_stokes_solve (fh, &rheolef::derr);
+		navier_stokes_solve();
 		odiststream o (uh.get_geo().name(), "field");
-		o << catchmark("Re") << Re << std::endl
-		  << catchmark("delta_t") << delta_t << std::endl
-		  << catchmark("u")  << uh
-		  << catchmark("p")  << ph;
+		write_to_diststream(o, "Re",Re, "delta_t",delta_t, "u",uh, "p",ph);
 		o.close();
 	}
 
 	field adapt_criteria() const
 	{}
 
-	Float const Re;
-	Float const delta_t;
-	Float tol;
-	std::size_t max_iter;
-
 	field& uh;
 	field& ph;
+	Float const Re;
+	Float const delta_t;
+	Float const tol;
+	size_t const max_iter;
+	size_t const report_freq;
+	XMLConfigFile xml;
+	BasicAugmentedLagrangian AL;
 };
 
 

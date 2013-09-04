@@ -26,7 +26,7 @@
  */
 
 
-typedef Problem_AugLag_ChannelUnitFlow  Problem;
+typedef Problem_NavierStokesCavity  Problem;
 typedef Problem::BC DirichletBoundaryConditions;
 typedef Problem::FieldsPool FieldsPool;
 typedef Problem::Mesh  Mesh;
