@@ -64,7 +64,8 @@ class IncompressibleNavierStokes
 			characteristic const X1(    -delta_t*uh_star);
 			characteristic const X2(-2.0*delta_t*uh_star);
 			field const l1h = integrate(dot(compose(uh1,X1),v), qopt);
-			field const l2h = integrate (dot(compose(uh2,X2),v), qopt);
+			field const l2h = integrate(dot(compose(uh2,X2),v), qopt);
+
 
 			AL.update_lagrangeMultipliers_fast();
 			field const lh  = dirichlet_rhs + (Re/delta_t)*(2*l1h - 0.5*l2h) + AL.augmented_lagraniang_rhs();
@@ -97,7 +98,6 @@ public:
 
 	void run()
 	{
-		using rheolef::catchmark;
 		navier_stokes_solve();
 		odiststream o (uh.get_geo().name(), "field");
 		write_to_diststream(o, "Re",Re, "delta_t",delta_t, "u",uh, "p",ph);

@@ -17,8 +17,8 @@
    <source_term></source_term>
    <Augmentation_coef>10</Augmentation_coef>
    <convergence_limit>1E-5</convergence_limit>
-   <max_iteration>500</max_iteration>
-   <report_frequency>10</report_frequency>    
+   <max_iteration>10</max_iteration>
+   <report_frequency>1</report_frequency>    
 
    <Mesh>
       <name>cavity</name>
