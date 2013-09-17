@@ -48,7 +48,7 @@ struct AdaptiveDriver
 			FieldsPool fields(conf.child(CFL_FieldsPool_Module),omega,BC);
 			Application app(conf,fields,BC);
 			CFL_mkresult_folder_and_cd_to_it(i);
-			strategy.run_app(app);
+			app.run();
 			OS::chdir_up();
 			if( i!=strategy.n_adapt ){
 				rheolef::field const criteria = app.adapt_criteria();

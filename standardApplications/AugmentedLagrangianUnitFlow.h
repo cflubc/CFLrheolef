@@ -11,102 +11,33 @@
 #include <cstddef>
 #include <cstdio>
 #include <cmath>
+#include <iostream>
 
 #include "rheolef.h"
 #include "rheolef/diststream.h"
 
 #include "ConfigXML.h"
 #include "ErrorAnalysis.h"
-#include "PrintArguments.h"
-#include "CFLSecantMethod.h"
-#include "CFLSteadyAnalyser.h"
 #include "BorderFluxCalculator.h"
 #include "ResidualTablePrinter.h"
 #include "AugmentedLagrangian_basic.h"
-#include "standard_augmentedLagrangian_algo.h"
+#include "ConvergenceMonitor.h"
+#include "BlockSystem_abtb.h"
+#include "IncompressibleStokesSolver.h"
+#include "GenericIteration.h"
+#include "FixedFlowrateIterator.h"
 
 
 
-template< bool isLinear >
-class unitflow_iterator;
-
-template<>
-class unitflow_iterator<false>
-{
-public:
-	template< typename UnitFlowApp, typename FieldPool >
-	unitflow_iterator( UnitFlowApp *const, FieldPool& ) {}
-
-	template< typename UnitFlowApp >
-	static void iterate( UnitFlowApp *const app )
-	{app->nonlinear_uniflow_iteration();}
-
-	void finalize_iterations() const {}
-};
-
-template<>
-class unitflow_iterator<true>
-{
-	typedef rheolef::field field;
-	typedef rheolef::Float Float;
-
-public:
-	template< typename UnitFlowApp, typename FieldPool >
-	unitflow_iterator( UnitFlowApp *const app, FieldPool& fields ):
-		param(0.),
-		Uh( calc_normalrhs_flow_helper(app,fields) ),
-		Ph(fields.Ph()),
-		normalrhs_Usolution(fields.Uh()),
-		normalrhs_Psolution(fields.Ph()),
-		normalrhs_flowrate( app->get_flowrate() )
-	{}
-
-	template< typename UnitFlowApp >
-	void iterate( UnitFlowApp *const app )
-	{
-		auto& predictor = app->predictor;
-		app->AL.solve_vel_minization( app->vel_rhs_const_part );
-		Float const flowrate_discripency = predictor.get_target_val()-app->get_flowrate();
-		param = flowrate_discripency/normalrhs_flowrate;
-		Uh += param*normalrhs_Usolution;
-		predictor.set_input(param);
-	}
-
-	void finalize_iterations()
-	{Ph += param*normalrhs_Psolution;}
-
-private:
-	template< typename UnitFlowApp, typename FieldPool >
-	static field& calc_normalrhs_flow_helper( UnitFlowApp *const app, FieldPool& fields )
-	{
-		app->AL.get_velocity_discrete_dirichlet_rhs( app->vel_rhs_const_part );
-		app->vel_rhs = app->vel_rhs_const_part + app->rhs_control.get_rhs();
-		app->AL.solve_vel_minization( app->vel_rhs );
-
-		return fields.Uh();
-	}
-
-	Float param;
-	field& Uh;
-	field& Ph;
-	field const normalrhs_Usolution;
-	field const normalrhs_Psolution;
-	Float const normalrhs_flowrate;
-};
-
-
-
-
-template< typename BasicAugmentedLagrangian, typename VelocityRHSManipulator >
+template< typename BasicAugmentedLagrangian,
+		  typename VelocityRHSManipulator >
 class AugmentedLagrangianUnitFlow
 {
 	typedef rheolef::field field;
 	typedef rheolef::Float Float;
 	typedef std::size_t size_t;
 
-	enum : bool { useLinearOptimization =  BasicAugmentedLagrangian::isVelocityOptimizerLinear &&
-                                             VelocityRHSManipulator::isLinear  };
-	typedef unitflow_iterator<useLinearOptimization> UnitFlowIterator;
+	typedef FixedFlowrateIterator<VelocityRHSManipulator::isLinear> UnitFlowIterator;
 	friend UnitFlowIterator;
 
 public:
@@ -115,69 +46,54 @@ public:
 	AugmentedLagrangianUnitFlow( XMLConfigFile const& conf,
 								 FieldsPool& fields,
 								 DirichletBC BC ):
+		XML_INIT_VAR(conf,target_flowrate,"target_flowrate"),
+		AL(conf,fields,BC),
+		velocity_minimizer(conf,fields,BC,AL.augmentation_coef()),
+		rhs_control(conf.child("unitflow_rhs_controller"),fields.Uspace()),
 		vel_rhs_const_part(fields.Uspace(), 0.),
 		vel_rhs(vel_rhs_const_part),
-		rhs_control(conf.child("unitflow_rhs_controller"),fields.Uspace()),
+		dirichlet_rhs( init_dirichlet_rhs(fields.Uspace()) ),
 		flowrate(conf("flowrate_calculation_edge_name"),fields.Uh()),
-		AL(conf,fields,BC),
-		report_header_reprint_frequency( conf.get_if_path_exist({"report_header_reprint_frequency"},30) ),
-
-		LowResolution_conf( conf.child("LowResolution_step") ),
-		seq( LowResolution_conf.child("SteadyAnalyser") ),
-		predictor( LowResolution_conf.child("Secant") ),
-		XML_INIT_VAR(LowResolution_conf,LR_max_iteration,"max_iteration"),
-		LR_n_iterations_without_report( XML_VAL(LowResolution_conf,LR_n_iterations_without_report,"reports_frequency")-1 ),
-
-		HighResolution_conf( conf.child("HighResolution_step") ),
-		XML_INIT_VAR(HighResolution_conf,HR_max_iteration,"max_iteration"),
-		XML_INIT_VAR(HighResolution_conf,HR_converge_limit,"flowrate_convergence_limit"),
-		algo(HighResolution_conf.child("AugmentedLag")),
-		unitflow(this,fields)
+		deltaU(fields.Uh()),
+		loop(conf),
+		base_name( fields.geo_name() ),
+		output(30,std::cout,10,15,17,12),
+		residuals("lowResolution",{"|Un+1-Un|L2","|Gamdot-Gam|L2","ControlParam"}),
+		unitflow(this,conf,fields)
 	{}
 
+	void iterate(){
+		flowrate_control_param = unitflow.iterate(this);
+		AL.update_lagrangeMultipliers_fast();
+		vel_rhs_const_part = AL.augmented_lagraniang_rhs() + dirichlet_rhs;
+	}
+
+	void iterate_report( size_t const niter, Float& res ){
+		deltaU.save_field();
+		AL.save_strain();
+		iterate();
+		Float const Gamres = AL.strain_change();
+		Float const Ures = deltaU.calculate_field_change();
+		res = rheolef::max(Ures,Gamres);
+
+		output.print_header_if_needed("\niteration","|Un+1-Un|L2","|Gamdot-Gam|L2","Parameter");
+		output.print(niter,Ures,Gamres,flowrate_control_param);
+		residuals.add_point(niter,{Ures,Gamres,flowrate_control_param});
+	}
 
 	void run()
 	{
 		printf("\n-------------------------------------------------------\n"
-				 "|                Low Resolution stage                 |\n"
+				 "|               Fixed flowrate iteration              |\n"
 				 "-------------------------------------------------------\n");
-		auto output = make_residual_table(report_header_reprint_frequency,std::cout,10,15,17,12);
-		ConvergenceMonitor residuals("lowResolution",{"|Un+1-Un|L2","|Gamdot-Gam|L2","ControlParam"});
-		size_t niter = 0;
-
-		AL.get_velocity_discrete_dirichlet_rhs(vel_rhs_const_part);
-		field const dirichlet_rhs = vel_rhs_const_part;
-		while( niter<LR_max_iteration && !seq.sequence_steady_state_reached(residuals[2]) )
-		{
-			for(size_t i=0; i<LR_n_iterations_without_report; ++i)
-				unitlfow_iteration(dirichlet_rhs);
-			niter += LR_n_iterations_without_report;
-			Float Ures, Gamres;
-			AL.save_strain_velocity();
-			unitlfow_iteration(dirichlet_rhs);
-			AL.report_strain_velocity_change(Gamres,Ures);
-
-			residuals.add_point(++niter,{Ures,Gamres,predictor.get_input()});
-			output.print_header_if_needed("\niteration","|Un+1-Un|L2","|Gamdot-Gam|L2","Parameter");
-			output.print(niter,Ures,Gamres,predictor.get_input());
-		}
-		unitflow.finalize_iterations();
-		residuals.save_to_file();
-		printf("\n>>> Unit flow low resolution stage finishde");
-		print_solution_convergence_message( niter<LR_max_iteration );
-
-
-		if( 0<HR_max_iteration ){
-			printf("\n-------------------------------------------------------\n"
-					 "|                High Resolution stage                |\n"
-					 "-------------------------------------------------------\n");
-			high_resolution_stage(dirichlet_rhs);
-		}
-
+		loop(*this);
+		unitflow.finalize_iterations(flowrate_control_param);
 		AL.update_lagrangeMultipliers_clac_strain_rate_multiplier();
+		residuals.save_to_file();
 		rheolef::odiststream o(AL.geo_name(),"field");
-		write_to_diststream(o,"ControlParam", predictor.get_input(),
+		write_to_diststream(o,"ControlParam", flowrate_control_param,
 				              "Flowrate", get_flowrate() );
+		velocity_minimizer.write_results(o);
 		AL.write_fields(o);
 		o.close();
 	}
@@ -185,66 +101,33 @@ public:
 	field adapt_criteria() const
 	{return AL.adapt_criteria();}
 
-
 private:
-
-	void high_resolution_stage( field const& dirichlet_rhs )
-	{
-		predictor.set_tolerance_and_Maxiteration(HR_converge_limit,HR_max_iteration);
-		predictor.reset();
-		while( predictor.not_converged_and_have_iterations_left() )
-		{
-			vel_rhs_const_part = rhs_control.get_rhs( predictor.get_input() ) + dirichlet_rhs;
-			algo.run(AL,vel_rhs_const_part,vel_rhs);
-			Float const flux = get_flowrate();
-			print_args(rheolef::dout,"[Iter ",predictor.n_iterations_done(),
-					  "] Control parameter: ",predictor.get_input(),
-					  ", Flowrate: ",flux);
-			predictor.predict_new_input(flux);
-		}
-		algo.save_residual_history_to_file();
-	}
 
 	Float get_flowrate() const
 	{return flowrate.calc_flux();}
 
-	void unitlfow_iteration( field const& dirichlet_rhs )
-	{
-		unitflow.iterate(this);
-		AL.update_lagrangeMultipliers_fast();
-		vel_rhs_const_part = AL.augmented_lagraniang_rhs() + dirichlet_rhs;
+	field init_dirichlet_rhs( rheolef::space const& X ){
+		field f(X,0.);
+		velocity_minimizer.set_discrete_dirichlet_rhs(f);
+		return f;
 	}
 
-	void nonlinear_uniflow_iteration()
-	{
-		predictor.reset();
-		// unit flow secant loop
-		while( predictor.not_converged_and_have_iterations_left() )
-		{
-			vel_rhs = vel_rhs_const_part + rhs_control.get_rhs( predictor.get_input() );
-			AL.solve_vel_minization(vel_rhs);
-			predictor.predict_new_input( get_flowrate() );
-		}
-	}
 
+	Float flowrate_control_param;
+	Float const target_flowrate;
+	BasicAugmentedLagrangian AL;
+	IncompLinearDiffusionStokesSolver<BlockSystem_abtb> velocity_minimizer;
+	VelocityRHSManipulator rhs_control;
 	field vel_rhs_const_part;
 	field vel_rhs;
-
-	VelocityRHSManipulator rhs_control;
+	field const dirichlet_rhs;
 	BorderFluxCalculator const flowrate;
-	BasicAugmentedLagrangian AL;
-	size_t const report_header_reprint_frequency;
+	L2norm_calculator deltaU;
 
-	XMLConfigFile const LowResolution_conf;
-	CFLSteadyAnalyser seq;
-	CFLSecantMethod predictor;
-	size_t const LR_max_iteration;
-	size_t const LR_n_iterations_without_report;
-
-	XMLConfigFile const HighResolution_conf;
-	size_t const HR_max_iteration;
-	Float  const HR_converge_limit;
-	standard_augmentedLagrangian_algo algo;
+	GenericIteration loop;
+	std::string const base_name;
+	ResidualTablePrinter<4,std::ostream> output;
+	ConvergenceMonitor residuals;
 	UnitFlowIterator unitflow;
 };
 

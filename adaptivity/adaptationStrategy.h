@@ -35,11 +35,6 @@ public:
 		opts.additional = conf("additional");
 	}
 
-	template< typename Application >
-	void run_app( Application& app )
-	{app.run();}
-
-
 	rheolef::adapt_option_type const& opt( size_t const icycle )
 	{
 	#define SET_OPT(name) opts.name = name[icycle];

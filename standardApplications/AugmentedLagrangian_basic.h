@@ -83,9 +83,7 @@ typedef non_unique<alpha_multiRegion_init> alpha_multiRegion;
 typedef non_unique<ParameterOnDOFs::multiRegion_field_initializer> Bingham_multiRegion;
 } // namespace AugmentedLagrangian_param
 
-template< typename VelocityMinimizationSolver,
-          typename BinghamParam,
-          typename alphaParam >
+template< typename BinghamParam, typename alphaParam >
 class AugmentedLagrangian_basic
 {
 	typedef rheolef::field field;
@@ -96,7 +94,6 @@ class AugmentedLagrangian_basic
 	typedef Tensor_itr::tensor                         Tensor;
 
 public:
-	enum : bool { isVelocityOptimizerLinear = VelocityMinimizationSolver::isLinear };
 
 	template< typename FieldsPool, typename DirichletBC >
 	AugmentedLagrangian_basic( const XMLConfigFile& conf,
@@ -106,16 +103,13 @@ public:
 		XML_INIT_VAR(conf,a,"Augmentation_coef"),
 		Bn( Xh[0], conf.child({"PhysicalParameters","Bn"}), typename BinghamParam::init() ),
 		alpha( Xh[0], conf.child({"PhysicalParameters","Viscosity"}), typename alphaParam::init(a) ),
-		velocity_minimizer(conf,fields,BC,a),
 		Tau(Xh, 0.),
 		Gam(Xh, -1000.),
 		Gamdot(Xh, 0.),
 		TminusaG(Xh, 0.),
-		rhs_augmentation(fields.Uspace(), 0.),
 		Gamdot_server(fields.Uh()),
 		div_ThUh( -.5*trans(Gamdot_server.set_desired_strainrate_space(Xh)) ),
-		deltaTau(Tau),
-		deltaU(fields.Uh())
+		deltaTau(Tau)
 	{}
 
 
@@ -129,49 +123,20 @@ public:
 		update_lagrangeMultipliers(x);
 	}
 
-	Float iterate_report_strain_change( field const& const_rhs, field& rhs ){
-		deltaTau.save_field();
-		iterate(const_rhs,rhs);
-		return deltaTau.calculate_field_change()/a;
-	}
-
-	void iterate_ntimes( int const niter, field const& const_rhs, field& rhs ){
-		for( int i=0; i<niter; ++i )
-			iterate(const_rhs,rhs);
-	}
-
-	void iterate_ntimes_report_strain_velocity_change( int const niter, field const& const_rhs, field& rhs, Float& dGam, Float& dU ){
-		iterate_ntimes(niter-1,const_rhs,rhs);
-		iterate_report_strain_velocity_change(const_rhs,rhs,dGam,dU);
-	}
-
-	void iterate_report_strain_velocity_change( field const& const_rhs, field& rhs, Float& dT, Float& dU ){
-		save_strain_velocity();
-		iterate(const_rhs,rhs);
-		report_strain_velocity_change(dT,dU);
-	}
-
-	void iterate( field const& const_rhs, field& rhs ){
+	Float update_lagrangeMultipliers_report_strain_residual(){
+		save_strain();
 		update_lagrangeMultipliers_fast();
-		rhs = const_rhs + augmented_lagraniang_rhs();
-		solve_vel_minization(rhs);
+		return strain_change();
 	}
 
-	void save_strain_velocity(){
-		deltaTau.save_field();
-		deltaU.save_field();
-	}
+	void save_strain()
+	{deltaTau.save_field();}
 
-	void report_strain_velocity_change( Float& dGam, Float& dU ){
-		dGam = deltaTau.calculate_field_change()/a;
-		dU = deltaU.calculate_field_change();
-	}
+	Float strain_change()
+	{return deltaTau.calculate_field_change()/a;}
 
-	field const augmented_lagraniang_rhs()
-	{
-		rhs_augmentation = div_ThUh*TminusaG;
-		return rhs_augmentation;
-	}
+	field augmented_lagraniang_rhs() const
+	{return div_ThUh*TminusaG;}
 
 	field adapt_criteria() const {
 		// just scalar version of Th
@@ -190,7 +155,6 @@ public:
 	}
 
 	void write_fields( rheolef::odiststream& o ) const {
-		velocity_minimizer.write_results(o);
 		write_field(Tau,"T",o);
 		write_field(Gam,"Gam",o);
 		write_field(Gamdot,"Gammadot",o);
@@ -199,37 +163,30 @@ public:
 	std::string geo_name() const
 	{return Xh.get_geo().name();}
 
-	void get_velocity_discrete_dirichlet_rhs( field& f ) {
-		velocity_minimizer.set_discrete_dirichlet_rhs(f);
-	}
-
 	void reset_lagrangeMultipliers(){
 		Tau = 0.;
 		TminusaG = 0.;
 	}
 
-	void solve_vel_minization( field const& rhs ) const
-	{velocity_minimizer.solve(rhs);}
-
 	field const& get_strainRate_lagrangeMultiplier() const
 	{return Gam;}
 
-private:
+	Float augmentation_coef() const
+	{return a;}
+
+
 	space Xh;    ///< tensor space of Lagrange multipliers
 	Float const a;       ///< Augmentation coef
 	typename BinghamParam::param_t Bn;
 	typename alphaParam::param_t alpha;
 
-	VelocityMinimizationSolver velocity_minimizer;
 	field Tau;   ///< Stress Lagrange multiplier
 	field Gam;   ///< Strain rate Lagrange multiplier
 	field Gamdot;  ///< Strain rate of velocity
 	field TminusaG;
-	field rhs_augmentation;
 	StrainRateCalculator Gamdot_server;
 	rheolef::form div_ThUh;
 	L2norm_calculator deltaTau;
-	L2norm_calculator deltaU;
 
 	template< typename LoopManipulator >
 	void update_lagrangeMultipliers( LoopManipulator& obj );
@@ -261,9 +218,9 @@ private:
 
 
 
-template< typename VelocityMinimizationSolver, typename BinghamParam, typename alphaParam >
+template< typename BinghamParam, typename alphaParam >
 template< typename LoopManipulator >
-void AugmentedLagrangian_basic<VelocityMinimizationSolver,BinghamParam,alphaParam>::
+void AugmentedLagrangian_basic<BinghamParam,alphaParam>::
 update_lagrangeMultipliers( LoopManipulator& obj )
 {
 	Gamdot_server.get(Gamdot);

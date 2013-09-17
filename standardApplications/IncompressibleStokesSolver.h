@@ -36,11 +36,10 @@ class IncompLinearDiffusionStokesSolver
 	typedef rheolef::field field;
 	typedef rheolef::form form;
 
+public:
 	field& uh;
 	field& ph;
-	LinearSol solver;
 
-public:
 	enum : bool { isLinear=true };
 
 	template< typename FieldsPool, typename DirichletBC >
@@ -89,6 +88,9 @@ public:
 	void set_discrete_dirichlet_rhs( field& urhs ) {
 		solver.set_discrete_dirichlet_rhs(urhs,uh);
 	}
+
+private:
+	LinearSol solver;
 };
 
 

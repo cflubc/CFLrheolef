@@ -14,8 +14,8 @@
 
 #include "CFL.h"
 #include "ConfigXML.h"
-#include "StandardAugmentedLagrangian.h"
 #include "PrintArguments.h"
+#include "SteadyStokesAugmentedIteration.h"
 
 
 template< typename BasicAugmentedLagrangian, typename ForcingRHS >
@@ -30,10 +30,8 @@ public:
 	FlowOnsetDetection( const XMLConfigFile& conf,
 								 FieldsPool& fields,
 								 DirichletBC BC ):
-	    vel_rhs(fields.Uspace(), 0.),
 		force_rhs(conf.child("rhs_force_term"),fields.Uspace()),
-		AL(solver_child(conf),fields,BC),
-		algo(solver_child(conf)),
+		iter(solver_child(conf), fields, BC),
 		XML_INIT_VAR(conf,tolerance,"force_param_tolerance"),
 		XML_INIT_VAR(conf,initial_dparam,"force_param_delta")
 	 {}
@@ -61,7 +59,7 @@ public:
 			else
 				param += dparam;
 		}
-		AL.write_results();
+		iter.write_results();
 	}
 
 private:
@@ -69,8 +67,8 @@ private:
 	bool has_flow_for( Float const& param )
 	{
 		print_args(std::cout,"Param: ",param);
-		algo.run(AL,force_rhs.get_rhs(param),vel_rhs);
-		rheolef::field const& Gam = AL.get_strainRate_lagrangeMultiplier();
+		iter.do_iterations( force_rhs.get_rhs(param) );
+		rheolef::field const& Gam = iter.get_strainRate_lagrangeMultiplier();
 		bool has_flow;
 		if( vector_dot(Gam,Gam)==0 ){
 			printf(" No flow!\n");
@@ -87,10 +85,8 @@ private:
 	XMLConfigFile solver_child( XMLConfigFile const& conf )
 	{return conf.child("Solver");}
 
-	rheolef::field vel_rhs;
 	ForcingRHS force_rhs;
-	BasicAugmentedLagrangian AL;
-	standard_augmentedLagrangian_algo algo;
+	SteadyStokesAugmentedIteration<BasicAugmentedLagrangian> iter;
 
 	Float const tolerance;
 	Float const initial_dparam;

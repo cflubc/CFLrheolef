@@ -10,9 +10,7 @@
 
 #include "CFL.h"
 #include "BCs.h"
-#include "BlockSystem_abtb.h"
-#include "IncompressibleStokesSolver.h"
-#include "StandardAugmentedLagrangian.h"
+#include "SteadyStokesAugmentedIteration.h"
 #include "AugmentedLagrangianUnitFlow.h"
 #include "IncompressibleNavierStokes.h"
 
@@ -31,9 +29,9 @@ struct VoidRHS {
 };
 
 typedef IncompLinearDiffusionStokesSolver<BlockSystem_abtb> StokesFlow;
-typedef AugmentedLagrangian_basic<StokesFlow,AugmentedLagrangian_param::Bingham_unique,AugmentedLagrangian_param::alpha_unique> ALbasic_unique_params;
-typedef AugmentedLagrangian_basic<StokesFlow,AugmentedLagrangian_param::Bingham_multiRegion,AugmentedLagrangian_param::alpha_unique> ALbasic_multiRegion_Bn;
-typedef AugmentedLagrangian_basic<StokesFlow,AugmentedLagrangian_param::Bingham_multiRegion,AugmentedLagrangian_param::alpha_multiRegion> ALbasic_multiRegion;
+typedef AugmentedLagrangian_basic<AugmentedLagrangian_param::Bingham_unique,AugmentedLagrangian_param::alpha_unique> ALbasic_unique_params;
+typedef AugmentedLagrangian_basic<AugmentedLagrangian_param::Bingham_multiRegion,AugmentedLagrangian_param::alpha_unique> ALbasic_multiRegion_Bn;
+typedef AugmentedLagrangian_basic<AugmentedLagrangian_param::Bingham_multiRegion,AugmentedLagrangian_param::alpha_multiRegion> ALbasic_multiRegion;
 
 struct Problem_NewtonianCavity
 {
@@ -73,7 +71,7 @@ struct Problem_AugLag_ChannelUnitFlow
 
 struct Problem_AugLag_SteadyPoiseuille
 {
-	typedef StandardAugmentedLagrangian<ALbasic_unique_params,BodyForce> Application;
+	typedef SteadyStokesAugmentedLagrangian<ALbasic_unique_params,BodyForce> Application;
 	typedef channelBC  BC;
 	typedef FlowFields FieldsPool;
 	typedef ChannelMesh Mesh;
@@ -82,7 +80,7 @@ struct Problem_AugLag_SteadyPoiseuille
 
 struct Problem_AugLag_SteadyCavity
 {
-	typedef StandardAugmentedLagrangian<ALbasic_unique_params,VoidRHS> Application;
+	typedef SteadyStokesAugmentedLagrangian<ALbasic_unique_params,VoidRHS> Application;
 	typedef cavityBC BC;
 	typedef FlowFields FieldsPool;
 	typedef ChannelMesh Mesh;

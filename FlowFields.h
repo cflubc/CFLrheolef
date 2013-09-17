@@ -8,6 +8,7 @@
 #ifndef FLOWFIELDS_H_
 #define FLOWFIELDS_H_
 
+#include <string>
 
 #include "rheolef/diststream.h"
 #include "rheolef.h"
@@ -47,6 +48,9 @@ struct FlowFields
 
 	geo const& get_geo() const
 	{return omega;}
+
+	std::string geo_name() const
+	{return omega.name();}
 
 	space const& Uspace() const
 	{return Xh;}

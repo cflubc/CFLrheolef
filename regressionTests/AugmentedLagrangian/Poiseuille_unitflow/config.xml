@@ -20,37 +20,19 @@
    </unitflow_rhs_controller>
 
    <flowrate_calculation_edge_name>left</flowrate_calculation_edge_name>
+   <target_flowrate>-1</target_flowrate>
    <report_header_reprint_frequency>30</report_header_reprint_frequency>
+   <max_iteration>300</max_iteration>
+   <min_iteration>100</min_iteration>
+   <convergence_limit>4e-6</convergence_limit>
+   <reports_frequency>50</reports_frequency>
 
-   <LowResolution_step>
-      <SteadyAnalyser>
-	     <n_points_to_monitor>10</n_points_to_monitor>
-         <normalized_deviation_limit>.001</normalized_deviation_limit>
-      </SteadyAnalyser>
-
-      <Secant>
-         <max_iter>6</max_iter>
-         <tolerance>1E-3</tolerance>
-         <target>-1.</target>
-         <initial_point>0 0</initial_point>
-         <next_input>3.</next_input>
-      </Secant>
-
-      <max_iteration>500</max_iteration>
-      <reports_frequency>20</reports_frequency>
-   </LowResolution_step>
-
-   <HighResolution_step>
-      <max_iteration>0</max_iteration>
-      <flowrate_convergence_limit>1E-5</flowrate_convergence_limit>
-
-      <AugmentedLag>
-         <reports_frequency>50</reports_frequency>
-         <convergence_limit>3E-6</convergence_limit>
-         <max_iteration>100</max_iteration>
-         <min_iteration>50</min_iteration>
-      </AugmentedLag>
-   </HighResolution_step>
+   <Secant>
+     <max_iter>6</max_iter>
+     <tolerance>1E-3</tolerance>
+     <initial_point>0 0</initial_point>
+     <next_input>3.</next_input>
+   </Secant>
 
    <Mesh>
       <name>channel</name>

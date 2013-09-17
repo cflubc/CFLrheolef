@@ -23,11 +23,11 @@ class CFLSecantMethod : public SecantMethod<rheolef::Float>
 
 public:
 
-	CFLSecantMethod( XMLConfigFile const& conf ):
+	CFLSecantMethod( XMLConfigFile const& conf, Float const& target ):
 		SecantMethod<Float>(
 				conf("max_iter",std::size_t()),
 				conf("tolerance",Float()),
-				conf("target",Float()),
+				target,
 				x1(init_point_str(conf)),
 				f1(init_point_str(conf)),
 				conf("next_input",Float())

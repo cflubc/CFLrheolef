@@ -26,7 +26,7 @@
  */
 
 
-typedef Problem_NavierStokesCavity  Problem;
+typedef Problem_MacroBubbleFlowOnset  Problem;
 typedef Problem::BC DirichletBoundaryConditions;
 typedef Problem::FieldsPool FieldsPool;
 typedef Problem::Mesh  Mesh;
