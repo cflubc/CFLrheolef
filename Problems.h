@@ -21,6 +21,7 @@
 #include "ChannelMesh.h"
 #include "WavyChannelMesh.h"
 #include "FlowOnsetDetection.h"
+#include "WavyFracture.h"
 
 
 struct VoidRHS {
@@ -44,7 +45,7 @@ struct Problem_NewtonianCavity
 
 struct Problem_NavierStokesCavity
 {
-	typedef IncompressibleNavierStokes<ALbasic_unique_params> Application;
+	typedef IncompressibleNavierStokes Application;
 	typedef FlowFields FieldsPool;
 	typedef cavityBC BC;
 	typedef ChannelMesh Mesh;
@@ -56,7 +57,7 @@ struct Problem_WavyFouling
 	typedef AugmentedLagrangianUnitFlow<ALbasic_unique_params,BodyForce> Application;
 	typedef channelBC BC;
 	typedef FlowFields FieldsPool;
-	typedef WavyChannelMesh Mesh;
+	typedef WavyFracture Mesh;
 	static constexpr cstr Name = "WavyFouling";
 };
 

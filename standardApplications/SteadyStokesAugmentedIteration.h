@@ -92,7 +92,7 @@ private:
 	GenericIteration algo;
 	field vel_rhs_const_part;
 	field vel_rhs;
-	std::string const base_name;
+	std::string const& base_name;
 	ResidualTablePrinter<3,std::ostream> output;
 };
 

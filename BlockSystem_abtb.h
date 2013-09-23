@@ -112,6 +112,9 @@ class abtb_solver_preconditionedP
 	rheolef::solver_abtb const solver;
 
 public:
+
+	abtb_solver_preconditionedP() {}
+
 	abtb_solver_preconditionedP( const XMLConfigFile& cf, const form& a, const form& b ):
 		mp(b.get_second_space(),b.get_second_space(),"mass"),
 		solver( a.uu(), b.uu(), mp.uu() )
@@ -127,12 +130,14 @@ class BlockSystem_abtb
 	typedef rheolef::form form;
 	typedef rheolef::field field;
 
-	form a;
-	form b;
+	form const a;
+	form const b;
 	rheo_vec p_rhs;
-	abtb_solver_preconditionedP abtb_method;
+	abtb_solver_preconditionedP const abtb_method;
 
 public:
+
+	BlockSystem_abtb() {}
 
 	BlockSystem_abtb( const XMLConfigFile& cf, const form& _a, const form& _b ):
 		a(_a),

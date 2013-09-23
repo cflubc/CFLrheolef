@@ -7,7 +7,7 @@
 
 #include <cstdlib>
 #include <stdexcept>
-
+#include <array>
 #include "rheolef.h"
 #include "rheolef/diststream.h"
 
@@ -26,7 +26,7 @@
  */
 
 
-typedef Problem_MacroBubbleFlowOnset  Problem;
+typedef Problem_WavyFouling  Problem;
 typedef Problem::BC DirichletBoundaryConditions;
 typedef Problem::FieldsPool FieldsPool;
 typedef Problem::Mesh  Mesh;

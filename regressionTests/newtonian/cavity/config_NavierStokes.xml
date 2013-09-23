@@ -12,9 +12,10 @@
       <dt>.01</dt>
    </PhysicalParameters>
 
-   <tolerance>1e-5</tolerance>
-   <max_iteration>500</max_iteration>
-   <report_frequency>20</report_frequency>
+   <convergence_limit>1e-5</convergence_limit>
+   <max_iteration>700</max_iteration>
+   <min_iteration>100</min_iteration>
+   <report_frequency>50</report_frequency>
 
    <Mesh>
       <name>cavity</name>
@@ -25,13 +26,14 @@
    </Mesh>
 
     <Adaptation>
-        <cycles>0</cycles>
+        <cycles>2</cycles>
         <n_vertices_max>10000</n_vertices_max>
-        <hmin>.01</hmin>
+        <hmin>.001</hmin>
         <hmax>.3</hmax>
-        <hcoef>4</hcoef>
+        <hcoef>3</hcoef>
         <ratio>1</ratio>
         <err>1e-3</err>
         <errg>1e-1</errg>
+        <additional>-RelError</additional>
     </Adaptation>    
 </data>

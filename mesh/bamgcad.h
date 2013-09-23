@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <string>
+#include <utility>
 
 #include "PrintArguments.h"
 
@@ -67,7 +68,7 @@ public:
 
 	template< typename Container >
 	void print_points( Container const& X, Container const& Y, char const*const tag ){
-		for(auto x=begin(X), y=begin(Y); x!=end(X); ++x,++y)
+		for(auto x=begin(X), x_end=end(X), y=begin(Y); x!=x_end; ++x,++y)
 			print(*x," ",*y,tag);
 	}
 
@@ -77,8 +78,8 @@ public:
 	}
 
 	template< typename... Args >
-	void print( Args const&... args )
-	{print_args(file,args...);}
+	void print( Args&&... args )
+	{print_args(file,std::forward<Args>(args)...);}
 
 	void close_file()
 	{file.close();}

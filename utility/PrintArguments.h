@@ -8,6 +8,8 @@
 #ifndef PRINTARGUMENTS_H_
 #define PRINTARGUMENTS_H_
 
+#include <utility>
+
 
 template< typename Stream >
 inline void
@@ -16,18 +18,18 @@ print_args( Stream& s )
 
 template< typename Stream, typename T, typename... Args >
 inline void
-print_args( Stream& s, T const& t, Args const&... args )
+print_args( Stream& s, T&& t, Args&&... args )
 {
-	s << t;
-	print_args(s,args...);
+	s << std::forward<T>(t);
+	print_args(s, std::forward<Args>(args)...);
 }
 
 
 template< typename Stream, typename... Args >
 inline void
-println_args( Stream& s, Args const&... args )
+println_args( Stream& s, Args&&... args )
 {
-	print_args(s,args...,'\n');
+	print_args(s, std::forward<Args>(args)..., '\n');
 }
 
 

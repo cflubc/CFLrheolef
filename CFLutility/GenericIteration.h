@@ -24,7 +24,7 @@ public:
 		XML_INIT_VAR(conf,convergence_limit,"convergence_limit"),
 		XML_INIT_VAR(conf,max_iteration,"max_iteration"),
 		XML_INIT_VAR(conf,min_iteration,"min_iteration"),
-		XML_INIT_VAR(conf,report_frequency,"reports_frequency")
+		report_frequency( conf.get_if_path_exist("report_frequency",30) )
 	{}
 
 

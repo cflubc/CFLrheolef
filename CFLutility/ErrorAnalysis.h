@@ -12,29 +12,32 @@
 #include "CFL.h"
 
 
-struct L2norm_calculator
+class L2norm_calculator
 {
 	typedef rheolef::field field;
+	typedef rheolef::Float Float;
 
-	field const* f;
-	field field_old;
-	rheolef::form mass;
+public:
 
-	L2norm_calculator( const field& _f ):
-		f(&_f),
-		mass(_f.get_space(),_f.get_space(),"mass")
-	{}
+	L2norm_calculator( field const& _f );
+	L2norm_calculator( field const& f1, field const& f2 );
 
-	void save_field()
-	{field_old = *f;}
-
-	rheolef::Float calculate_fieldL2( field const& f ) const
-	{return rheolef::sqrt(mass(f,f));}
+	void save_field();
 
 	/// This function is invoked after f has changed
 	rheolef::Float calculate_field_change();
-};
 
+	rheolef::Float calculate_fieldL2( field const& q ) const
+	{return rheolef::sqrt(mass(q,q));}
+
+private:
+
+	bool const initialized_with_one_field;
+	field const& f;
+	field const*const f_new;
+	field field_delta;
+	rheolef::form const mass;
+};
 
 
 #endif /* ERRORANALYSIS_H_ */

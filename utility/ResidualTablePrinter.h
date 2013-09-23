@@ -9,7 +9,8 @@
 #define RESIDUALTABLEPRINTER_H_
 
 #include <cstddef>
-#include <initializer_list>
+#include <utility>
+#include <string>
 #include <stdexcept>
 
 #include "RecuringAlarm.h"
@@ -19,8 +20,9 @@
 template< int Ncolumns, typename Stream >
 class ResidualTablePrinter
 {
-	RecuringAlarm header_reprint;
 	ColumnOutputFormatter<Ncolumns,Stream> table;
+	RecuringAlarm header_reprint;
+	std::string const dashed_line;
 
 public:
 
@@ -28,21 +30,24 @@ public:
 	ResidualTablePrinter(
 							std::size_t const header_reprint_frequency,
 							Stream& s,
-							WidthList... list ):
+							WidthList&& ... list ):
+		table(s, std::forward<WidthList>(list)...),
 		header_reprint(header_reprint_frequency),
-		table(s,{list...})
+		dashed_line(table.table_width(),'-')
 	{}
 
 	template< typename... Args >
-	void print( const Args... args )
-	{table.print(args...);}
+	void print( Args&&... args )
+	{table.print( std::forward<Args>(args)... );}
 
 	template< typename... Args >
-	void print_header_if_needed( const Args... args )
+	void print_header_if_needed( Args&&... args )
 	{
 		if( header_reprint.alarm_ringing() ){
-			table.print(args...);
-			table.fill_horizontal('-');
+			table.newline();
+			table.print( std::forward<Args>(args)... );
+			table.unformatted_print(dashed_line);
+			table.newline();
 		}
 	}
 };
@@ -53,9 +58,10 @@ inline ResidualTablePrinter<sizeof...(WidthList),Stream>
 make_residual_table(
 		std::size_t const header_reprint_frequency,
 		Stream& out,
-		WidthList... list )
+		WidthList&&... list )
 {
-	return ResidualTablePrinter<sizeof...(WidthList),Stream>(header_reprint_frequency,out,list...);
+	return ResidualTablePrinter<sizeof...(WidthList),Stream>
+	        (header_reprint_frequency, out, std::forward<WidthList>(list)...);
 }
 
 
