@@ -5,6 +5,7 @@
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.debug.573256013" moduleId="org.eclipse.cdt.core.settings" name="Debug">
 				<macros>
 					<stringMacro name="rheolef_path" type="VALUE_TEXT" value="/home/ali/Install/rheolef-mumps"/>
+					<stringMacro name="gcc_path" type="VALUE_TEXT" value="/home/ali/Downloads/g++-4.8.1"/>
 				</macros>
 				<externalSettings/>
 				<extensions>
@@ -44,7 +45,7 @@
 								<option id="gnu.cpp.compiler.option.warnings.extrawarn.880579508" name="Extra warnings (-Wextra)" superClass="gnu.cpp.compiler.option.warnings.extrawarn" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.warnings.wconversion.349605272" name="Implicit conversion warnings (-Wconversion)" superClass="gnu.cpp.compiler.option.warnings.wconversion" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.optimization.flags.429063445" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" value="-pipe" valueType="string"/>
-								<option id="gnu.cpp.compiler.option.debugging.other.1851811540" name="Other debugging flags" superClass="gnu.cpp.compiler.option.debugging.other" value="-ggdb" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.debugging.other.1851811540" name="Other debugging flags" superClass="gnu.cpp.compiler.option.debugging.other" value="" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1521459913" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.617519423" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
@@ -82,6 +83,7 @@
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.debug.573256013.584562314" moduleId="org.eclipse.cdt.core.settings" name="Release">
 				<macros>
 					<stringMacro name="rheolef_path" type="VALUE_TEXT" value="/home/ali/Install/rheolef-dev"/>
+					<stringMacro name="gcc_path" type="VALUE_TEXT" value="/home/ali/Downloads/g++-4.8.1"/>
 				</macros>
 				<externalSettings/>
 				<extensions>

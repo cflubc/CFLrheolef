@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+    <problem>WavyFouling</problem>
+
+    <FEfields>
+        <pspace>P1</pspace>
+        <vspace>P2</vspace>
+        <BCtype>full</BCtype>
+    </FEfields>
+
+    <AugmentedLagrangian>
+        <Bn>2</Bn>
+        <a>20</a>
+    </AugmentedLagrangian>
+
+   <unitflow_rhs_controller>
+	   <bodyforce_vector>1 0 0</bodyforce_vector>
+   </unitflow_rhs_controller>
+
+   <flowrate_calculation_edge_name>left</flowrate_calculation_edge_name>
+   <report_header_reprint_frequency>30</report_header_reprint_frequency>
+
+   <LowResolution_step>
+      <max_iteration>400</max_iteration>
+      <reports_frequency>50</reports_frequency>   
+
+      <SteadyAnalyser>
+	     <n_points_to_monitor>10</n_points_to_monitor>
+         <normalized_deviation_limit>1e-5</normalized_deviation_limit>
+      </SteadyAnalyser>
+
+      <Secant>
+         <max_iter>4</max_iter>
+         <tolerance>1E-3</tolerance>
+         <target>-1.</target>
+         <initial_point>0 0</initial_point>
+         <next_input>2.</next_input>
+      </Secant>
+   </LowResolution_step>
+
+   <HighResolution_step>
+      <max_iteration>0</max_iteration>
+      <flowrate_convergence_limit>1E-5</flowrate_convergence_limit>
+
+      <AugmentedLag>
+         <reports_frequency>50</reports_frequency>
+         <convergence_limit>3E-6</convergence_limit>
+         <max_iteration>1000</max_iteration>
+         <min_iteration>200</min_iteration>
+      </AugmentedLag>
+   </HighResolution_step>
+
+   <Mesh>
+      <name>wav</name>
+      <type>symxy</type>
+      
+      <amplitude>1</amplitude>
+      <phase>0.9</phase>
+      <entry_length>1</entry_length>
+      <cycles>7</cycles>
+      <L>5</L>
+      <ParametricCurve_mesh>
+         <max_dTheta>.2</max_dTheta>
+         <max_ds>.2</max_ds>
+         <!--npoints_on_curve>10</npoints_on_curve-->
+      </ParametricCurve_mesh>
+      <command_line_args>-hmax .05</command_line_args>
+      <plot_mesh_args>no</plot_mesh_args>
+   </Mesh>
+
+    <Adaptation>
+        <cycles>4</cycles>
+        <hmin>.0009</hmin>
+        <hmax>.15</hmax>
+        <hcoef>1</hcoef>
+        <ratio>1</ratio>
+        <err>1e-4</err>
+        <errg>1e-1</errg>
+        <additional>-AbsError</additional>
+        <n_vertices_max>50000</n_vertices_max>
+    </Adaptation>   
+</data>

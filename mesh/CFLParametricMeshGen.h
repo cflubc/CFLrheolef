@@ -16,45 +16,25 @@
 
 
 
-class CFLConstCurveIntegrator
+class CFLConstCurveIntegrator : public ConstantPointCurveIntegrator<rheolef::Float>
 {
-	typedef rheolef::Float Float;
-	ConstantPointCurveIntegrator<Float> I;
-
 public:
-
 	CFLConstCurveIntegrator( XMLConfigFile const& conf ):
-		I( conf("npoints_on_curve",std::size_t()))
+		ConstantPointCurveIntegrator<rheolef::Float>(
+				conf("npoints_on_curve",std::size_t()) )
 	{}
-
-	void set_range( Float const& beg, Float const& end )
-	{ I.set_range(beg,end); }
-
-	template< typename Curve >
-	Float calc_delta_of_curve_parameter( Curve const& crv, Float const& t ) const
-	{ return I.calc_delta_of_curve_parameter(crv,t); }
-
 };
 
 
-
-class CFLCurveIntegrator
+class CFLCurveIntegrator : public CurveIntegrator<rheolef::Float,SecondOrderCurveIntegrator>
 {
 	typedef rheolef::Float Float;
-	CurveIntegrator<Float,SecondOrderCurveIntegrator> const I;
-
 public:
 
 	CFLCurveIntegrator( XMLConfigFile const& conf ):
-		I( conf("max_dTheta",Float()), conf("max_ds",Float()) )
+		CurveIntegrator<Float,SecondOrderCurveIntegrator>(
+				conf("max_dTheta",Float()), conf("max_ds",Float()) )
 	{}
-
-	void set_range( Float const& beg, Float const& end ) const
-	{ I.set_range(beg,end); }
-
-	template< typename Curve >
-	Float calc_delta_of_curve_parameter( Curve const& crv, Float const& t ) const
-	{ return I.calc_delta_of_curve_parameter(crv,t); }
 };
 
 
