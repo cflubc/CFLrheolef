@@ -36,6 +36,7 @@ class BubbleEncapsulationMesh
 public:
 
 	BubbleEncapsulationMesh( XMLConfigFile const& conf, string const& base_name ):
+		type( type_str(conf)[0] ),
 		h_wallMesh( conf.get_if_path_exist("hwall",double(0.)) ),
 		use_fineMesh_on_wall( 0<h_wallMesh ),
 		gen_droplet_mesh( type_str(conf)[1]==string("droplet")  ),
@@ -43,10 +44,10 @@ public:
 		ry( .5*conf("bubble_width",ry) ),
 		 D( .5*conf("channel_width",D) ),
 		 L( .5*conf("channel_length",L) ),
+		 A( type=="symxy" ? L*D : 2.*L*D ),
 		shape(rx,ry),
 		curve_integrator( conf.child("ParametricCurve_mesh") )
 	{
-		string const type = type_str(conf)[0];
 		if( type=="symx" )
 			symx(base_name);
 		else if( type=="symxy" )
@@ -173,7 +174,6 @@ public:
 			bamg.print_subdomain_header(2);
 			bamg.print("2 ",direction_edge_id," -1 201\n");
 			bamg.print("2 ",direction_edge_id,"  1 202\n");
-
 		}
 		bamg.close_file();
 
@@ -187,6 +187,9 @@ public:
 		fdmn.close_file();
 	}
 
+	double area() const
+	{return A;}
+
 private:
 
 	std::vector<string> type_str( XMLConfigFile const& conf ){
@@ -195,6 +198,7 @@ private:
 		return v;
 	}
 
+	std::string const type;
 	double const h_wallMesh;
 	bool const use_fineMesh_on_wall;
 	bool const gen_droplet_mesh;
@@ -203,6 +207,7 @@ private:
 	double const ry;
 	double const  D;
 	double const  L;
+	double const A;
 
 	shape_ellipse shape;
 	CFLCurveIntegrator curve_integrator;

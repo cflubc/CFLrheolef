@@ -7,7 +7,6 @@
 
 #include <cstdlib>
 #include <stdexcept>
-#include <array>
 #include "rheolef.h"
 #include "rheolef/diststream.h"
 
@@ -17,16 +16,11 @@
 #include "adaptationCriterions.h"
 #include "TimeGauge.h"
 #include "Problems.h"
+#include "OperatingSystem.h"
 
 
-// saving for restart: is a solver adapter? or new wrapper object?
-/*
- * restart class: it runs the whole system first, if it is a case
- * of restart, reads the proper geometry and pass to adapt loop
- */
 
-
-typedef Problem_WavyFouling  Problem;
+typedef Problem_MacroBubbleFlowOnset  Problem;
 typedef Problem::BC DirichletBoundaryConditions;
 typedef Problem::FieldsPool FieldsPool;
 typedef Problem::Mesh  Mesh;
@@ -35,6 +29,7 @@ typedef NonAdaptiveDriver<Problem::Application,Problem::FieldsPool> Driver;
 
 int main(int argc, char** argv )
 {
+	using std::string;
 	rheolef::environment env(argc,argv);
 
 	bool generate_mesh = true;
@@ -56,15 +51,19 @@ int main(int argc, char** argv )
 	timer.start();
 
 	XMLConfigFile const meshxml = conf.child("Mesh");
-	std::string const base_name = meshxml("name");
+	string const base_name = meshxml("name");
 	if( generate_mesh )
 	{
 		Mesh create_meshcad( meshxml, base_name );
-		make_geo_from_bamgcad_and_dmn_file( base_name,meshxml("command_line_args") );
+		string const args = meshxml.get_if_path_exist("command_line_args",string(" "));
+		make_geo_from_bamgcad_and_dmn_file( meshxml("npoint",size_t()), base_name, args );
 	}
-	plot_mesh(meshxml, base_name);
+	string const Noplot = "no";
+	string const plot_mesh_args = meshxml.get_if_path_exist("plot_mesh_args",Noplot);
+	if( plot_mesh_args!=Noplot )
+		OS::run_command( "geo -noverbose "+plot_mesh_args+" "+base_name );
 	if( exit_after_mesh_gen )
-		exit(EXIT_SUCCESS);
+		return EXIT_SUCCESS;
 
 	DirichletBoundaryConditions BC( conf.child(CFL_FieldsPool_Module) );
 	Driver::run(conf, base_name, BC);
@@ -77,20 +76,3 @@ int main(int argc, char** argv )
 
 	return EXIT_SUCCESS;
 }
-/**/
-
-
-//int main( ){
-//	rheolef::idiststream o("wav-1-crit","field");
-//	rheolef::field w1, w;
-//	o >> w1;
-//	o.close();
-//
-//	o.open("wav-crit","field");
-//	o >> w;
-//	o.close();
-//
-//	rheolef::field wi = interpolate(w.get_space(),w1);
-//	rheolef::form m(w.get_space(),w.get_space(),"mass");
-//	std::cout << "this is the norm " << m(wi-w,wi-w) << '\n';
-//}

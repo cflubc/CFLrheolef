@@ -60,6 +60,12 @@ public:
 	template< typename T >
 	T operator()( xmlpath path, T val ) const;
 
+	/**
+	 * This overload is necessary: e.g. </opt>-hmax .5</opt> and we want to
+	 * get one string "-hmax .5". If use the normal templated function then
+	 * we only read the first "-hmax" from the stringstream.
+	 */
+	void operator()( xmlpath path, std::string *const val ) const;
 
     template< typename T >
     void set_if_path_exist( xmlpath path, T *const val ) const;
@@ -114,6 +120,12 @@ void XMLConfigFile::operator()( xmlpath path, T *const val ) const
 	std::istringstream ss( get_txt(path) );
 	ss >> *val;
 }
+
+
+inline
+void XMLConfigFile::operator()( xmlpath path, std::string *const val ) const
+{*val = operator()(path);}
+
 
 template< typename T >
 T XMLConfigFile::operator()( xmlpath path, T ) const

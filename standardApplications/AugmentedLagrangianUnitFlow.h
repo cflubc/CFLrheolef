@@ -59,13 +59,17 @@ public:
 		base_name( fields.geo_name() ),
 		output(30,std::cout,10,15,17,12),
 		residuals("lowResolution",{"|Un+1-Un|L2","|Gamdot-Gam|L2","ControlParam"}),
-		unitflow(this,conf,fields)
-	{}
+		unitflow(this,conf,fields),
+		Xi(fields.Uh())
+	{
+		Xi = 0.;
+		Xi[1]["fluid"] = conf({"PhysicalParameters","Xi"},Float());
+	}
 
 	void iterate(){
 		flowrate_control_param = unitflow.iterate(this);
 		AL.update_lagrangeMultipliers_fast();
-		vel_rhs_const_part = AL.augmented_lagraniang_rhs() + dirichlet_rhs;
+		vel_rhs_const_part = AL.augmented_lagraniang_rhs() + dirichlet_rhs + Xi;
 	}
 
 	void iterate_report( size_t const niter, Float& res ){
@@ -129,6 +133,7 @@ private:
 	ResidualTablePrinter<4,std::ostream> output;
 	ConvergenceMonitor residuals;
 	UnitFlowIterator unitflow;
+	field Xi;
 };
 
 

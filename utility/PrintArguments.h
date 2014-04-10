@@ -33,4 +33,18 @@ println_args( Stream& s, Args&&... args )
 }
 
 
+template< typename Stream >
+inline void
+extract_args( Stream& s )
+{}
+
+template< typename Stream, typename T, typename... Args >
+inline void
+extract_args( Stream& s, T& t, Args&... args )
+{
+	s >> t;
+	extract_args(s, args...);
+}
+
+
 #endif /* PRINTARGUMENTS_H_ */

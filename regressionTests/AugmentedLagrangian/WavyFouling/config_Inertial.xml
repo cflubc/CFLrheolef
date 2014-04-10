@@ -5,54 +5,32 @@
    <FEfields>
        <pspace>P1</pspace>
        <vspace>P2</vspace>
-       <BCtype>symmetry</BCtype>
+       <BCtype>full</BCtype>
    </FEfields>
 
    <PhysicalParameters>
+   	   <dt>.001</dt>
+   	   <Re>1</Re>
        <Bn>2</Bn>
        <Viscosity></Viscosity>
    </PhysicalParameters>
 
+   <source_term>
+      <bodyforce_vector>1 0 0</bodyforce_vector>
+   </source_term>
    <Augmentation_coef>10</Augmentation_coef>
-
-   <unitflow_rhs_controller>
-	   <bodyforce_vector>1 0 0</bodyforce_vector>
-   </unitflow_rhs_controller>
-
-	<flowrate_calculation_edge_name>left</flowrate_calculation_edge_name>
-	<target_flowrate>-1.</target_flowrate>
-
 	<report_header_reprint_frequency>30</report_header_reprint_frequency>
 	<max_iteration>500</max_iteration>
 	<min_iteration>100</min_iteration>
 	<reports_frequency>50</reports_frequency>   
 	<convergence_limit>4e-6</convergence_limit>
 
-	<Secant>
-	 <max_iter>4</max_iter>
-	 <tolerance>1E-3</tolerance>
-	 <initial_point>0 0</initial_point>
-	 <next_input>2.</next_input>
-	</Secant>
-
-   <HighResolution_step>
-      <max_iteration>0</max_iteration>
-      <flowrate_convergence_limit>1E-5</flowrate_convergence_limit>
-
-      <AugmentedLag>
-         <reports_frequency>50</reports_frequency>
-         <convergence_limit>3E-6</convergence_limit>
-         <max_iteration>1000</max_iteration>
-         <min_iteration>200</min_iteration>
-      </AugmentedLag>
-   </HighResolution_step>
-
    <Mesh>
       <name>wav</name>
-      <type>symxy</type>
+      <type>symy</type>
       <H>1</H>
       <L>4</L>
-      <Inlet>3</Inlet>
+      <Inlet>2</Inlet>
 
       <ParametricCurve_mesh>
          <max_dTheta>.2</max_dTheta>

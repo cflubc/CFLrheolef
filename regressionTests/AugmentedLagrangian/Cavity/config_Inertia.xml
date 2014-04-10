@@ -8,29 +8,30 @@
    </FEfields>
 
    <PhysicalParameters>
-       <dt>.01</dt>
-       <Re>100</Re>
+       <dt>.05</dt>
+       <Re>1000</Re>
        <Bn>10</Bn>
        <Viscosity></Viscosity>
    </PhysicalParameters>
 
    <source_term></source_term>
    <Augmentation_coef>10</Augmentation_coef>
-   <convergence_limit>1E-5</convergence_limit>
-   <max_iteration>300</max_iteration>
-   <report_frequency>50</report_frequency>    
+   <convergence_limit>1E-4</convergence_limit>
+   <max_iteration>6000</max_iteration>
+   <min_iteration>100</min_iteration>
+   <report_frequency>100</report_frequency>    
 
    <Mesh>
       <name>cavity</name>
       <type>full</type>
       <width>1</width>
       <length>1</length>
-      <command_line_args>-hmax .08</command_line_args>
+      <command_line_args>-hmax .05</command_line_args>
       <plot_mesh_args>no</plot_mesh_args>
    </Mesh>
 
     <Adaptation>
-        <cycles>3</cycles>
+        <cycles>0</cycles>
         <n_vertices_max>20000</n_vertices_max>
         <hmin>.0007</hmin>
         <hmax>.06</hmax>

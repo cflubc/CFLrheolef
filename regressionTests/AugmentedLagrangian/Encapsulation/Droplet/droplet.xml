@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+    <problem>AugLag_DropletEncapsulation</problem>
+
+    <FEfields>
+        <pspace>P1</pspace>
+        <vspace>P2</vspace>
+        <BCtype>symmetry</BCtype>
+    </FEfields>
+
+    <PhysicalParameters>
+        <Bn>
+           <domain_names>droplet fluid</domain_names>
+           <values>4.8 4.8</values>
+        </Bn>
+        <Viscosity></Viscosity>
+        <Xi>.1</Xi>
+    </PhysicalParameters>
+
+
+   <unitflow_rhs_controller>
+       <bodyforce_vector>1 0 0</bodyforce_vector>
+   </unitflow_rhs_controller>
+
+   <flowrate_calculation_edge_name>left</flowrate_calculation_edge_name>
+   <target_flowrate>-1.</target_flowrate>
+   
+   <Augmentation_coef>10</Augmentation_coef>
+   <convergence_limit>1e-5</convergence_limit>
+   <max_iteration>6000</max_iteration>
+   <min_iteration>600</min_iteration>
+   <report_frequency>100</report_frequency>
+
+   <Mesh>
+      <name>encap</name>
+      <type>symxy droplet</type>
+      <bubble_length>.8</bubble_length>
+      <bubble_width>.4</bubble_width>
+      <channel_width>2</channel_width>
+      <channel_length>2</channel_length>
+      <npoint>800</npoint>
+      
+      <ParametricCurve_mesh>
+         <max_dTheta>.1</max_dTheta>
+         <max_ds>.1</max_ds>
+      </ParametricCurve_mesh>
+   </Mesh>
+
+    <Adaptation>
+        <cycles>3</cycles>
+        <hmin>.0005</hmin>
+        <hmax>.1</hmax>
+        <hcoef>2 1</hcoef>
+        <ratio>1</ratio>
+        <err>4E-5</err>
+        <errg>1e-3</errg>
+        <additional>-AbsError</additional>
+        <n_vertices_max>90000</n_vertices_max>
+    </Adaptation>    
+</data>

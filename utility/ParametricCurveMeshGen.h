@@ -33,7 +33,7 @@
  *
  *  - void set_range( T const& beg, T const& end );
  *  - template< typename Curve >
- *    T calc_delta_of_curve_parameter( Curve const&, T const& ) const;
+ *    T estimate_next_point( Curve const&, T const& ) const;
  *
  * Having an integrator scheme, you can pass it to function @c gen_parametric_curve_mesh
  * to generate mesh for curve.
@@ -53,8 +53,8 @@ public:
 	{dt = (end-beg)/(Npoints+1);}
 
 	template< typename Curve >
-	T calc_delta_of_curve_parameter( Curve const&, T const& ) const
-	{return dt;}
+	T estimate_next_point( Curve const&, T const& t ) const
+	{return t+dt;}
 
 	void report() const {
 		printf("\n~~~ Constant curve mesh generation report ~~~\n");
@@ -137,7 +137,7 @@ private:
 
 /** if the curve is straight line, we get a division by zero in
  * @c calc_curve_parameter_increment_2get_const_twist functions.
- * So overload @c calc_delta_of_curve_parameter function for the straight line.
+ * So overload @c estimate_next_point function for the straight line.
  * Here forward declare the class to use it for defining the overload.*/
 struct straight_line;
 
@@ -159,7 +159,7 @@ public:
 	void set_range( T const& beg, T const& end ) const {}
 
 	template< typename Curve >
-	T calc_delta_of_curve_parameter( Curve const& crv, T const& t )
+	T estimate_next_point( Curve const& crv, T const& t )
 	{
 		curve_first_derivative<T> const df(crv,t);
 		T const dt = IntegrationMethod::
@@ -192,11 +192,11 @@ public:
 		}
 	}
 
-	T calc_delta_of_curve_parameter( straight_line const& crv, T const& t ) const
+	T estimate_next_point( straight_line const& crv, T const& t ) const
 	{
 		static const T dt =
 		delta_of_curve_parameter_for_straight_line( curve_first_derivative<T>(crv,t) );
-		return dt;
+		return t+dt;
 	}
 
 	void report() const
@@ -277,9 +277,8 @@ gen_parametric_curve_mesh(
 	Ischeme.set_range(range.beg,range.end);
 	T t = range.beg;
 	do {
-		T const new_t = Ischeme.calc_delta_of_curve_parameter(crv,t);
-		points.push_back(new_t);
-		t = new_t;
+		t = Ischeme.estimate_next_point(crv,t);
+		points.push_back(t);
 	} while( t<range.end );
 	// in last iteration always one point out of range is inserted
 	points.pop_back();

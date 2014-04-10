@@ -23,10 +23,11 @@
 class WavyChannelMesh
 {
 	typedef std::size_t size_t;
+	typedef std::string string;
 
 public:
 
-	WavyChannelMesh( XMLConfigFile const& conf, std::string const& base_name ):
+	WavyChannelMesh( XMLConfigFile const& conf, string const& base_name ):
 		inlet_length( conf.get_if_path_exist("Inlet",0) ),
 		wall( .5*conf("H",double()), conf("L",double()) ),
 		curve_integrator( conf.child("ParametricCurve_mesh") )
@@ -35,9 +36,11 @@ public:
 			throw std::logic_error("Inlet length of channel should be positive!");
 		X.reserve(300);
 		Y.reserve(300);
-		std::string const type( conf("type") );
+		string const type( conf("type") );
 		if( type=="symxy" )
 			symxy(base_name);
+		else if( type=="symy" )
+			symy(base_name);
 		else
 			throw std::logic_error("Wrong type for ChannelMesh provided");
 	}
@@ -45,7 +48,7 @@ public:
 
 private:
 
-	void symxy( std::string const& base_name )
+	void symxy( string const& base_name )
 	{
 		ExclusiveInterval<double> const range(-wall.half_of_wavelength,0.);
 		gen_parametric_curve_mesh(wall,curve_integrator,range,&X,&Y);
@@ -63,14 +66,49 @@ private:
 		bamg.print(xinlet," 1 1\n");
 		if( has_inlet )
 			bamg.print(-wall.half_of_wavelength," 1 1\n");
-		for(auto x=X.cbegin(), y=Y.cbegin(); x!=X.cend(); ++x,++y)
-			bamg.print(*x," ",*y," 1\n");
+		bamg.print_points(X,Y," 1\n");
 
 		bamg.print_edges_header();
 		bamg.print( "1 2 101\n"
 				    "2 3 102\n"
 				    "3 4 103\n" );
 		size_t const npoint_on_top = has_inlet ? nwall+1:nwall;
+		bamg.print_ordered_edges(4,npoint_on_top," 104\n");
+		bamg.print(nvertices," 1 104\n");
+		bamg.close_file();
+
+		RheolefDomainFile fdmn(base_name);
+		fdmn.print_edge_domains({"right","bottom","left","top"});
+		fdmn.close_file();
+	}
+
+	void symy( string const& base_name )
+	{
+		ExclusiveInterval<double> const range(-wall.half_of_wavelength,wall.half_of_wavelength);
+		gen_parametric_curve_mesh(wall,curve_integrator,range,&X,&Y);
+
+		bool const has_inlet = (0<inlet_length);
+		size_t const nwall = X.size();
+		size_t const ntrivial_vertices = has_inlet ? 6:4;
+		size_t const nvertices = ntrivial_vertices + nwall;
+		double const xinlet = wall.half_of_wavelength + inlet_length;
+
+		bamgcad bamg( nvertices, base_name );
+		bamg.print( xinlet," 1 1\n");
+		bamg.print( xinlet," 0 1\n");
+		bamg.print(-xinlet," 0 1\n");
+		bamg.print(-xinlet," 1 1\n");
+		if(has_inlet)
+			bamg.print(-wall.half_of_wavelength," 1 1\n");
+		bamg.print_points(X,Y," 1\n");
+		if(has_inlet)
+			bamg.print(wall.half_of_wavelength," 1 1\n");
+
+		bamg.print_edges_header();
+		bamg.print( "1 2 101\n"
+					"2 3 102\n"
+					"3 4 103\n");
+		size_t const npoint_on_top = has_inlet ? nwall+2:nwall;
 		bamg.print_ordered_edges(4,npoint_on_top," 104\n");
 		bamg.print(nvertices," 1 104\n");
 		bamg.close_file();

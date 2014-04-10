@@ -30,18 +30,19 @@
 
    <Mesh>
       <name>macroBub</name>
-      <type>symx</type>
-      <bubble_length>.8</bubble_length>
-      <bubble_width>.1</bubble_width>
+      <type>symx bubble</type>
+      <npoint>20</npoint>
+      <bubble_length>.6</bubble_length>
+      <bubble_width>.2</bubble_width>
       <channel_width>1</channel_width>
       <channel_length>2</channel_length>
-      <command_line_args>-hmax .5</command_line_args>
-      <use_fineMesh_on_wall>yes</use_fineMesh_on_wall>
-      <hwall>.01</hwall>
-      <plot_mesh_args>no</plot_mesh_args>
+      <command_line_args>-hmax 1</command_line_args>
+      <use_fineMesh_on_wall>no</use_fineMesh_on_wall>
+      <hwall>.05</hwall>
+      <plot_mesh_args>-gnuplot</plot_mesh_args>
 
       <ParametricCurve_mesh>
-         <max_dTheta>.5</max_dTheta>
+         <max_dTheta>.1</max_dTheta>
          <max_ds>.05</max_ds>
       </ParametricCurve_mesh>
    </Mesh>

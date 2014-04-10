@@ -12,6 +12,7 @@
 #include <fstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "PrintArguments.h"
 
@@ -30,6 +31,7 @@ bamgmesh_filename( std::string const base )
 class bamgcad
 {
 	typedef std::string string;
+	typedef std::vector<double> point_arr;
 	typedef char const*const tag_str;
 
 	size_t const nvertices;
@@ -66,10 +68,15 @@ public:
 		return last;
 	}
 
-	template< typename Container >
-	void print_points( Container const& X, Container const& Y, char const*const tag ){
-		for(auto x=begin(X), x_end=end(X), y=begin(Y); x!=x_end; ++x,++y)
-			print(*x," ",*y,tag);
+	void print_points( point_arr const& X, point_arr const& Y, tag_str tag, bool reverse=false ){
+		if(!reverse){
+			for(auto x=X.cbegin(), end=X.cend(), y=Y.cbegin(); x!=end; ++x,++y)
+				print(*x," ",*y,tag);
+		}
+		else{
+			for(auto x=X.crbegin(), end=X.crend(), y=Y.crbegin(); x!=end; ++x,++y)
+				print(*x," ",*y,tag);
+		}
 	}
 
 	size_t print_edge( size_t const& i, tag_str tag ){
@@ -88,6 +95,7 @@ public:
 
 void
 make_geo_from_bamgcad_and_dmn_file(
+		std::size_t const& npoints,
 		std::string const& base_name,
 		std::string const& other_commandline_args );
 

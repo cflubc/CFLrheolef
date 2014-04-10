@@ -127,16 +127,4 @@ void CFL_print_time_memory_useage( Stream& s, double const& runtime  )
 }
 
 
-class XMLConfigFile;
-/**
- * put no or remove <plot_mesh_args> part for not plotting the mesh.
- * all args are sent to rheolef "geo" command. So look at geo manual for
- * possible arguments. Most important ones are:
- *  1. "-gnuplot":  to view mesh interactively
- *  2. "-image-format eps" : to save mesh eps file
- * @param conf
- */
-void plot_mesh( XMLConfigFile const& conf, std::string const& geofile );
-
 #endif /* CFL_H_ */
-

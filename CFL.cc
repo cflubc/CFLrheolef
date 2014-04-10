@@ -49,14 +49,3 @@ void CFL_mkresult_folder_and_cd_to_it( int iadapt )
 	OS::mkdir(name);
 	OS::changedir(name);
 }
-
-
-void plot_mesh( XMLConfigFile const& conf, std::string const& base_name )
-{
-	cstr const no_disp = "no";
-	cstr const args = conf.return_txt_if_exist({"plot_mesh_args"},no_disp);
-	if( strcmp(no_disp,args)==0 )
-		return;
-	OS::run_command( "geo -noverbose "+base_name+" "+args );
-}
-

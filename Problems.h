@@ -13,6 +13,7 @@
 #include "SteadyStokesAugmentedIteration.h"
 #include "AugmentedLagrangianUnitFlow.h"
 #include "IncompressibleNavierStokes.h"
+#include "SteadyNavierStokesAugmentedLagrangian.h"
 
 #include "NormalStressBC_RHS.h"
 #include "BodyForce.h"
@@ -45,7 +46,9 @@ struct Problem_NewtonianCavity
 
 struct Problem_NavierStokesCavity
 {
-	typedef IncompressibleNavierStokes Application;
+//	typedef SteadyNavierStokesAugmentedLagrangian<ALbasic_unique_params> Application;
+//	typedef IncompressibleNavierStokes Application;
+	typedef SteadyNavierStokesAugmentedLagrangian<ALbasic_unique_params,VoidRHS> Application;
 	typedef FlowFields FieldsPool;
 	typedef cavityBC BC;
 	typedef ChannelMesh Mesh;
@@ -54,10 +57,11 @@ struct Problem_NavierStokesCavity
 
 struct Problem_WavyFouling
 {
-	typedef AugmentedLagrangianUnitFlow<ALbasic_unique_params,BodyForce> Application;
+//	typedef AugmentedLagrangianUnitFlow<ALbasic_unique_params,BodyForce> Application;
+	typedef SteadyNavierStokesAugmentedLagrangian<ALbasic_unique_params,BodyForce> Application;
 	typedef channelBC BC;
 	typedef FlowFields FieldsPool;
-	typedef WavyFracture Mesh;
+	typedef WavyChannelMesh Mesh;
 	static constexpr cstr Name = "WavyFouling";
 };
 
@@ -70,6 +74,7 @@ struct Problem_AugLag_ChannelUnitFlow
 	static constexpr cstr Name = "AugLag_ChannelUnitFlow";
 };
 
+
 struct Problem_AugLag_SteadyPoiseuille
 {
 	typedef SteadyStokesAugmentedLagrangian<ALbasic_unique_params,BodyForce> Application;
@@ -81,7 +86,7 @@ struct Problem_AugLag_SteadyPoiseuille
 
 struct Problem_AugLag_SteadyCavity
 {
-	typedef SteadyStokesAugmentedLagrangian<ALbasic_unique_params,VoidRHS> Application;
+	typedef SteadyNavierStokesAugmentedLagrangian<ALbasic_unique_params,VoidRHS> Application;
 	typedef cavityBC BC;
 	typedef FlowFields FieldsPool;
 	typedef ChannelMesh Mesh;
@@ -99,7 +104,7 @@ struct Problem_BubbleEncapsulation
 
 struct Problem_DropletEncapsulation
 {
-	typedef AugmentedLagrangianUnitFlow<ALbasic_multiRegion,BodyForce> Application;
+	typedef AugmentedLagrangianUnitFlow<ALbasic_multiRegion_Bn,BodyForce> Application;
 	typedef channelBC BC;
 	typedef FlowFields FieldsPool;
 	typedef BubbleEncapsulationMesh Mesh;
