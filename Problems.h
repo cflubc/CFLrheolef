@@ -113,7 +113,7 @@ struct Problem_DropletEncapsulation
 
 struct Problem_MacroBubbleFlowOnset
 {
-	typedef FlowOnsetDetection<ALbasic_unique_params,BodyForce> Application;
+	typedef FlowOnsetDetection<ALbasic_unique_params,NormalStressBC_RHS> Application;
 	typedef bubble_BC  BC;
 	typedef FlowFields FieldsPool;
 	typedef BubbleEncapsulationMesh Mesh;

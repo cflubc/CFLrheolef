@@ -17,45 +17,32 @@
     <force_param_tolerance>.01</force_param_tolerance>
 
 	<Solver>
-		<AugmentedLagrangian>
+	    <Augmentation_coef>10</Augmentation_coef>
+		<PhysicalParameters>
 		    <Bn>1</Bn>
-		    <a>10</a>
-		</AugmentedLagrangian>
+		    <Viscosity></Viscosity>
+		</PhysicalParameters>
 
-	   <convergence_limit>5E-6</convergence_limit>
+	   <convergence_limit>1E-6</convergence_limit>
+	   <min_iteration>5</min_iteration>
 	   <max_iteration>10</max_iteration>
-	   <reports_frequency>1</reports_frequency>
-	   <report_header_reprint_frequency>30</report_header_reprint_frequency>
+	   <report_frequency>1</report_frequency>
 	</Solver>
 
    <Mesh>
       <name>macroBub</name>
-      <type>symx bubble</type>
-      <npoint>20</npoint>
+      <type>symxy bubble</type>
+      <npoint>1000</npoint>
       <bubble_length>.6</bubble_length>
       <bubble_width>.2</bubble_width>
       <channel_width>1</channel_width>
       <channel_length>2</channel_length>
-      <command_line_args>-hmax 1</command_line_args>
-      <use_fineMesh_on_wall>no</use_fineMesh_on_wall>
-      <hwall>.05</hwall>
-      <plot_mesh_args>-gnuplot</plot_mesh_args>
+      <hwall>.02</hwall>
+      <plot_mesh_args>no</plot_mesh_args>
 
       <ParametricCurve_mesh>
          <max_dTheta>.1</max_dTheta>
          <max_ds>.05</max_ds>
       </ParametricCurve_mesh>
    </Mesh>
-
-    <Adaptation>
-        <cycles>3</cycles>
-        <hmin>.005</hmin>
-        <hmax>.1</hmax>
-        <hcoef>1</hcoef>
-        <ratio>1</ratio>
-        <err>1e-3</err>
-        <errg>1e-3</errg>
-        <additional>-AbsError</additional>
-        <n_vertices_max>10000</n_vertices_max>
-    </Adaptation>    
 </data>
